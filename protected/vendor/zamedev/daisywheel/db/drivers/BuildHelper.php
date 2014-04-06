@@ -2,12 +2,14 @@
 
 namespace daisywheel\db\drivers;
 
+use daisywheel\db\builder\DeleteCommand;
 use daisywheel\db\builder\ExpressionPart;
 use daisywheel\db\builder\FieldPart;
 use daisywheel\db\builder\FunctionPart;
 use daisywheel\db\builder\InsertCommand;
 use daisywheel\db\builder\PartWithAlias;
 use daisywheel\db\builder\SelectCommand;
+use daisywheel\db\builder\UpdateCommand;
 use daisywheel\db\builder\ValuePart;
 use daisywheel\core\InvalidArgumentsException;
 
@@ -19,37 +21,13 @@ class BuildHelper
             return self::buildSelectCommand($driver, $command);
         } elseif ($command instanceof InsertCommand) {
             return self::buildInsertCommand($driver, $command);
+        } elseif ($command instanceof DeleteCommand) {
+            return self::buildDeleteCommand($driver, $command);
+        } elseif ($command instanceof UpdateCommand) {
+            return self::buildUpdateCommand($driver, $command);
         } else {
             throw new InvalidArgumentsException();
         }
-    }
-
-    public static function buildInsertCommand($driver, $command)
-    {
-        $result = 'INSERT INTO '
-            . $driver->quoteTable($command->into)
-            . self::buildColumnList($driver, $command->columns, ' (' , ')')
-        ;
-
-        if (count($command->values)) {
-            $result .= ' VALUES ' . self::buildInsertValues($driver, $command->values);
-        }
-
-        return $result;
-    }
-
-    public static function buildInsertValues($driver, $values)
-    {
-        return join(', ', array_map(function($v) use ($driver) {
-            return '(' . self::buildPartList($driver, $v, ', ', '', '') . ')';
-        }, $values));
-    }
-
-    public static function buildColumnList($driver, $columns, $prepend, $append)
-    {
-        return $prepend . join(', ', array_map(function($v) use ($driver) {
-            return $driver->quoteIdentifier($v);
-        }, $columns)) . $append;
     }
 
     public static function buildPartList($driver, $list, $join=', ', $empty='', $prepend='')
@@ -61,6 +39,74 @@ class BuildHelper
         return $prepend . join($join, array_map(function($v) use ($driver) {
             return self::buildPart($driver, $v);
         }, $list));
+    }
+
+    protected static function buildUpdateCommand($driver, $command)
+    {
+        if ($command->table === null) {
+            throw new BuildException('Update command must have "table" clause');
+        }
+
+        if (!count($command->setList)) {
+            throw new BuildException('Update command must have "set" clause');
+        }
+
+        return 'UPDATE '
+            . self::buildTable($driver, $command->table)
+            . ' SET ' . self::buildSetList($driver, $command->setList)
+            . ($command->where ? ' WHERE ' . self::buildExpressionPart($driver, $command->where) : '')
+        ;
+    }
+
+    protected static function buildSetList($driver, $list)
+    {
+        return join(', ', array_map(function($v) use ($driver) {
+            return self::buildFieldPart($driver, $v['field'])
+                . ' = '
+                . self::buildPart($driver, $v['value'])
+            ;
+        }, $list));
+    }
+
+    protected static function buildDeleteCommand($driver, $command)
+    {
+        if ($command->from === null) {
+            throw new BuildException('Delete command must have "from" clause');
+        }
+
+        return 'DELETE FROM '
+            . self::buildTable($driver, $command->from)
+            . ($command->where ? ' WHERE ' . self::buildExpressionPart($driver, $command->where) : '')
+        ;
+    }
+
+    protected static function buildInsertCommand($driver, $command)
+    {
+        if ($command->into === null) {
+            throw new BuildException('Insert command must have "into" clause');
+        }
+
+        $result = 'INSERT INTO '
+            . self::buildTable($driver, $command->into)
+            . ' (' . self::buildPartList($driver, $command->columns) . ')'
+        ;
+
+        if (count($command->values)) {
+            $result .= ' VALUES ' . self::buildInsertValues($driver, $command->values);
+        }
+
+        if ($command->select) {
+            $result .= ' ' . self::buildSelectCommand($driver, $command->select);
+        }
+
+        return $result;
+    }
+
+    protected static function buildInsertValues($driver, $values)
+    {
+        return join(', ', array_map(function($v) use ($driver) {
+            return '(' . self::buildPartList($driver, $v, ', ', '', '') . ')';
+        }, $values));
     }
 
     protected static function buildSelectCommand($driver, $command)

@@ -77,6 +77,7 @@ class Application
         })->build();
         */
 
+        /*
         $sql = $context->db->builder(function($b) {
             return $b->insert()
                 ->into('Address')
@@ -92,6 +93,32 @@ class Application
                 ->from('House')
             ;
         })->build();
+        */
+
+        /*
+        $sql = $context->db->builder(function($b) {
+            return $b->delete()
+                ->from('Address')
+                ->where($b->f('id'), '=', 42)
+            ;
+        })->build();
+        */
+
+        // /*
+        $sql = $context->db->builder(function($b) {
+            return $b->update()
+                ->table('Address')
+                ->set('name', 42)
+                ->set('name', $b->concat($b->f('id'), ' 2'))
+                ->set('name', $b->e($b->f('id'), '+', 1))
+                ->set(array(
+                    array('name', 42),
+                    array('name', 24),
+                ))
+                ->where($b->f('id'), '=', 42)
+            ;
+        })->build();
+        // */
 
         header('Content-type: text/plain');
         echo $sql;

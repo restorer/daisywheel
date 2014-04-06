@@ -6,20 +6,23 @@ use daisywheel\core\InvalidArgumentsException;
 
 class InsertCommand extends Command
 {
-    protected $into = '';
+    protected $into = null;
     protected $columns = array();
     protected $values = array();
     protected $select = null;
 
-    public function into($into)
+    public function into()
     {
-        $this->into = $into;
+        $this->into = new Table(func_get_args());
         return $this;
     }
 
     public function columns()
     {
-        $this->columns = func_get_args();
+        $this->columns = array_map(function($v) {
+            return FieldPart::create(array($v));
+        }, func_get_args());
+
         return $this;
     }
 

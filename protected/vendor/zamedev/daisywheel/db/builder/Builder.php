@@ -62,6 +62,16 @@ class Builder
         return new InsertCommand($this->driver);
     }
 
+    public function delete()
+    {
+        return new DeleteCommand($this->driver);
+    }
+
+    public function update()
+    {
+        return new UpdateCommand($this->driver);
+    }
+
     public function __call($name, $arguments)
     {
         $funcName = mb_strtoupper($name);
