@@ -2,7 +2,7 @@
 
 namespace daisywheel\core;
 
-class Entity
+class Object
 {
     public function __get($name)
     {
@@ -24,5 +24,16 @@ class Entity
         } else {
             throw new UnknownPropertyException('Setting unknown property ' . get_class($this) . "::{$name}");
         }
+    }
+
+    public function __call($name, $arguments)
+    {
+        $method = "magic{$name}";
+
+        if (method_exists($this, $method)) {
+            return call_user_func_array(array($this, $method), $arguments);
+        }
+
+        throw new UnknownMethodException('Calling unknown method ' . get_class($this) . "::{$name}");
     }
 }

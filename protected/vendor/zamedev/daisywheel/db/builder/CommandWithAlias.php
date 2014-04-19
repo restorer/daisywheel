@@ -2,8 +2,6 @@
 
 namespace daisywheel\db\builder;
 
-use daisywheel\core\UnknownMethodException;
-
 class CommandWithAlias extends Command
 {
     protected $asName = '';
@@ -17,16 +15,5 @@ class CommandWithAlias extends Command
     protected function getAsName()
     {
         return $this->asName;
-    }
-
-    public function __call($name, $arguments)
-    {
-        $method = "magic{$name}";
-
-        if (method_exists($this, $method)) {
-            return call_user_func_array(array($this, $method), $arguments);
-        }
-
-        throw new UnknownMethodException('Calling unknown method ' . get_class($this) . "::{$method}");
     }
 }

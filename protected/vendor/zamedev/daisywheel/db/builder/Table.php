@@ -2,10 +2,10 @@
 
 namespace daisywheel\db\builder;
 
-use daisywheel\core\Entity;
+use daisywheel\core\Object;
 use daisywheel\core\InvalidArgumentsException;
 
-class Table extends Entity
+class Table extends Object
 {
     protected $name = null;
     protected $asName = '';

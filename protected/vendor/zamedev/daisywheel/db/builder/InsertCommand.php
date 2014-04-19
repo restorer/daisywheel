@@ -19,9 +19,19 @@ class InsertCommand extends Command
 
     public function columns()
     {
+        $arguments = func_get_args();
+
+        if (count($arguments) && is_array($arguments[0])) {
+            if (count($arguments) > 1) {
+                throw new InvalidArgumentsException();
+            }
+
+            $arguments = $arguments[0];
+        }
+
         $this->columns = array_map(function($v) {
-            return FieldPart::create(array($v));
-        }, func_get_args());
+            return ColumnPart::create(array($v));
+        }, $arguments);
 
         return $this;
     }

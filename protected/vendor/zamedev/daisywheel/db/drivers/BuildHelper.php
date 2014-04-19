@@ -2,9 +2,10 @@
 
 namespace daisywheel\db\drivers;
 
+use daisywheel\db\builder\ColumnPart;
+use daisywheel\db\builder\CreateTableCommand;
 use daisywheel\db\builder\DeleteCommand;
 use daisywheel\db\builder\ExpressionPart;
-use daisywheel\db\builder\FieldPart;
 use daisywheel\db\builder\FunctionPart;
 use daisywheel\db\builder\InsertCommand;
 use daisywheel\db\builder\PartWithAlias;
@@ -25,6 +26,8 @@ class BuildHelper
             return self::buildDeleteCommand($driver, $command);
         } elseif ($command instanceof UpdateCommand) {
             return self::buildUpdateCommand($driver, $command);
+        } elseif ($command instanceof CreateTableCommand) {
+            return self::buildCreateTableCommand($driver, $command);
         } else {
             throw new InvalidArgumentsException();
         }
@@ -39,6 +42,11 @@ class BuildHelper
         return $prepend . join($join, array_map(function($v) use ($driver) {
             return self::buildPart($driver, $v);
         }, $list));
+    }
+
+    protected static function buildCreateTableCommand($driver, $command)
+    {
+        return 'CREATE TABLE';
     }
 
     protected static function buildUpdateCommand($driver, $command)
@@ -61,7 +69,7 @@ class BuildHelper
     protected static function buildSetList($driver, $list)
     {
         return join(', ', array_map(function($v) use ($driver) {
-            return self::buildFieldPart($driver, $v['field'])
+            return self::buildColumnPart($driver, $v['column'])
                 . ' = '
                 . self::buildPart($driver, $v['value'])
             ;
@@ -142,7 +150,7 @@ class BuildHelper
         }
 
         return ' ORDER BY ' . join(', ', array_map(function($v) use ($driver, $reverse) {
-            return self::buildFieldPart($driver, $v['field']) . ' ' . (($reverse ? !$v['asc'] : $v['asc']) ? 'ASC' : 'DESC');
+            return self::buildColumnPart($driver, $v['column']) . ' ' . (($reverse ? !$v['asc'] : $v['asc']) ? 'ASC' : 'DESC');
         }, $command->orderByList)) . ' ';
     }
 
@@ -153,7 +161,7 @@ class BuildHelper
         }
 
         return $prepend . join(', ', array_map(function($v) use ($driver) {
-            return self::buildFieldPart($driver, $v);
+            return self::buildColumnPart($driver, $v);
         }, $list));
     }
 
@@ -199,8 +207,8 @@ class BuildHelper
     {
         if ($part instanceof ExpressionPart) {
             $result = self::buildExpressionPart($driver, $part);
-        } elseif ($part instanceof FieldPart) {
-            $result = self::buildFieldPart($driver, $part);
+        } elseif ($part instanceof ColumnPart) {
+            $result = self::buildColumnPart($driver, $part);
         } elseif ($part instanceof FunctionPart) {
             $result = $driver->buildFunctionPart($part);
         } elseif ($part instanceof SelectCommand) {
@@ -283,12 +291,12 @@ class BuildHelper
         return $result;
     }
 
-    protected static function buildFieldPart($driver, $part)
+    protected static function buildColumnPart($driver, $part)
     {
-        if ($part->fieldName === '*') {
+        if ($part->columnName === '*') {
             $result = '*';
         } else {
-            $result = $driver->quoteIdentifier($part->fieldName);
+            $result = $driver->quoteIdentifier($part->columnName);
         }
 
         if ($part->tableName != '') {

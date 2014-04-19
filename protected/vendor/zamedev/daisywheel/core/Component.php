@@ -2,7 +2,7 @@
 
 namespace daisywheel\core;
 
-class Component extends Entity
+class Component extends Object
 {
     protected $context = null;
 

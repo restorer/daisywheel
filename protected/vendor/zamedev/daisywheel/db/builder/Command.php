@@ -2,9 +2,9 @@
 
 namespace daisywheel\db\builder;
 
-use daisywheel\core\Entity;
+use daisywheel\core\Object;
 
-class Command extends Entity
+class Command extends Object
 {
     protected $driver = null;
 

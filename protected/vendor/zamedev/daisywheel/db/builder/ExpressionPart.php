@@ -80,17 +80,6 @@ class ExpressionPart extends PartWithAlias
         return $this->relations;
     }
 
-    public function __call($name, $arguments)
-    {
-        $method = "magic{$name}";
-
-        if (method_exists($this, $method)) {
-            return call_user_func_array(array($this, $method), $arguments);
-        }
-
-        throw new UnknownMethodException('Calling unknown method ' . get_class($this) . "::{$method}");
-    }
-
     public static function create($arguments)
     {
         if (count($arguments) === 1 && ($arguments[0] instanceof ExpressionPart)) {

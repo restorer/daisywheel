@@ -6,6 +6,8 @@ use daisywheel\db\builder\FunctionPart;
 
 class SqliteDriver extends BaseDriver
 {
+    // $con->exec('PRAGMA foreign_keys = ON;');
+
     public function quoteIdentifier($name)
     {
         return '"' . str_replace('"', '""', preg_replace('/[^A-Za-z_\-."\'` ]/u', '', $name)) . '"';

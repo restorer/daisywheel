@@ -6,7 +6,7 @@ use daisywheel\core\InvalidArgumentsException;
 
 class UpdateCommand extends Command
 {
-    protected $table = '';
+    protected $table = null;
     protected $setList = array();
     protected $where = null;
 
@@ -36,7 +36,7 @@ class UpdateCommand extends Command
             }
 
             $this->setList[] = array(
-                'field' => FieldPart::create(array($item[0])),
+                'column' => ColumnPart::create(array($item[0])),
                 'value' => ValuePart::create(array($item[1])),
             );
         }

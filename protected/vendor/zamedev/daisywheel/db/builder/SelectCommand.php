@@ -82,9 +82,9 @@ class SelectCommand extends CommandWithAlias implements Part
         return $this;
     }
 
-    public function groupBy($field)
+    public function groupBy($column)
     {
-        $this->groupByList[] = FieldPart::create(array($field));
+        $this->groupByList[] = ColumnPart::create(array($column));
         return $this;
     }
 
@@ -94,10 +94,10 @@ class SelectCommand extends CommandWithAlias implements Part
         return $this;
     }
 
-    public function orderBy($field, $asc=true)
+    public function orderBy($column, $asc=true)
     {
         $this->orderByList[] = array(
-            'field' => FieldPart::create(array($field)),
+            'column' => ColumnPart::create(array($column)),
             'asc' => $asc,
         );
 

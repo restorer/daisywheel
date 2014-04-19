@@ -67,9 +67,9 @@ class MsSqlDriver extends BaseDriver
         }
 
         if ($this->sqlServerVersion >= 2005) {
-            $field = 'rownumber_' . uniqid();
+            $column = 'rownumber_' . uniqid();
 
-            return "SELECT * FROM ({$start} ROW_NUMBER() OVER ({$order}) AS {$field}, {$parts}) WHERE {$field} BETWEEN "
+            return "SELECT * FROM ({$start} ROW_NUMBER() OVER ({$order}) AS {$column}, {$parts}) WHERE {$column} BETWEEN "
                 . $this->quote($command->offset + 1)
                 . ' AND '
                 . $this->quote($command->offset + $command->limit);

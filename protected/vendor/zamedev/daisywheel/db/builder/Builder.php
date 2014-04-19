@@ -32,9 +32,14 @@ class Builder
         $this->driver = $driver;
     }
 
-    public function f()
+    public function c()
     {
-        return FieldPart::create(func_get_args());
+        return ColumnPart::create(func_get_args());
+    }
+
+    public function e()
+    {
+        return ExpressionPart::create(func_get_args());
     }
 
     public function v()
@@ -42,9 +47,9 @@ class Builder
         return ValuePart::create(func_get_args());
     }
 
-    public function e()
+    public function ref()
     {
-        return ExpressionPart::create(func_get_args());
+        return new Reference(func_get_args());
     }
 
     public function not()
@@ -70,6 +75,11 @@ class Builder
     public function update()
     {
         return new UpdateCommand($this->driver);
+    }
+
+    public function create()
+    {
+        return new CreateSelector($this->driver);
     }
 
     public function __call($name, $arguments)
