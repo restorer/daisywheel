@@ -12,8 +12,6 @@ class ColumnPart extends PartWithAlias
     const TYPE_SMALLINT = 'SMALLINT';
     const TYPE_INT = 'INT';
     const TYPE_BIGINT = 'BIGINT';
-    const TYPE_SERIAL = 'SERIAL';
-    const TYPE_BITSERIAL = 'BIGSERIAL';
     const TYPE_DECIMAL = 'DECIMAL';
     const TYPE_FLOAT = 'FLOAT';
     const TYPE_DOUBLE = 'DOUBLE';
@@ -36,8 +34,6 @@ class ColumnPart extends PartWithAlias
         self::TYPE_SMALLINT => true,
         self::TYPE_INT => true,
         self::TYPE_BIGINT => true,
-        self::TYPE_SERIAL => true,
-        self::TYPE_BITSERIAL => true,
         self::TYPE_DECIMAL => true,
         self::TYPE_FLOAT => true,
         self::TYPE_DOUBLE => true,

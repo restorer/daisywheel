@@ -2,12 +2,96 @@
 
 namespace daisywheel\db\drivers;
 
+use daisywheel\db\builder\ColumnPart;
+use daisywheel\db\builder\ForeignReference;
 use daisywheel\db\builder\FunctionPart;
 use daisywheel\core\InvalidConfigurationException;
 
 class MsSqlDriver extends BaseDriver
 {
     protected $sqlServerVersion = 0;
+
+    public function getColumnTypeMap()
+    {
+        return array(
+            ColumnPart::TYPE_PRIMARYKEY => array(
+                'type' => 'INT NOT NULL IDENTITY(1, 1) PRIMARY KEY',
+                'supportNotNull' => false,
+                'supportDefault' => false,
+            ),
+            ColumnPart::TYPE_BIGPRIMARYKEY => array(
+                'type' => 'BIGINT NOT NULL IDENTITY(1, 1) PRIMARY KEY',
+                'supportNotNull' => false,
+                'supportDefault' => false,
+            ),
+            ColumnPart::TYPE_TYNYINT => array(
+                'type' => 'TINYINT',
+            ),
+            ColumnPart::TYPE_SMALLINT => array(
+                'type' => 'SMALLINT',
+            ),
+            ColumnPart::TYPE_INT => array(
+                'type' => 'INT',
+            ),
+            ColumnPart::TYPE_BIGINT => array(
+                'type' => 'BIGINT',
+            ),
+            ColumnPart::TYPE_DECIMAL => array(
+                'type' => 'DECIMAL',
+                'supportOptions' => array(0, 2),
+            ),
+            ColumnPart::TYPE_FLOAT => array(
+                'type' => 'FLOAT(24)',
+            ),
+            ColumnPart::TYPE_DOUBLE => array(
+                'type' => 'FLOAT(53)',
+            ),
+            ColumnPart::TYPE_DATE => array(
+                'type' => 'DATE',
+            ),
+            ColumnPart::TYPE_TIME => array(
+                'type' => 'TIME',
+            ),
+            ColumnPart::TYPE_DATETIME => array(
+                'type' => 'DATETIME',
+            ),
+            ColumnPart::TYPE_CHAR => array(
+                'type' => 'NCHAR',
+                'supportOptions' => array(1, 1),
+            ),
+            ColumnPart::TYPE_VARCHAR => array(
+                'type' => 'NVARCHAR',
+                'supportOptions' => array(1, 1),
+            ),
+            ColumnPart::TYPE_TEXT => array(
+                'type' => 'NVARCHAR(MAX)',
+            ),
+            ColumnPart::TYPE_MEDIUMTEXT => array(
+                'type' => 'NVARCHAR(MAX)',
+            ),
+            ColumnPart::TYPE_LONGTEXT => array(
+                'type' => 'NVARCHAR(MAX)',
+            ),
+            ColumnPart::TYPE_BLOB => array(
+                'type' => 'VARBINARY(MAX)',
+            ),
+            ColumnPart::TYPE_MEDIUMBLOB => array(
+                'type' => 'VARBINARY(MAX)',
+            ),
+            ColumnPart::TYPE_LONGBLOB => array(
+                'type' => 'VARBINARY(MAX)',
+            ),
+        );
+    }
+
+    public function getReferenceOptionMap()
+    {
+        return array(
+            ForeignReference::OPTION_RESTRICT => 'NO ACTION',
+            ForeignReference::OPTION_CASCADE => 'CASCADE',
+            ForeignReference::OPTION_SET_NULL => 'SET NULL',
+        );
+    }
 
     public function connect($dsn, $username, $password, $driverOptions, $charset)
     {
@@ -23,7 +107,12 @@ class MsSqlDriver extends BaseDriver
 
     public function quoteIdentifier($name)
     {
-        return '[' . preg_replace('/[^A-Za-z_\-."\'` ]/u', '', $name) . ']';
+        return '[' . preg_replace('/[^A-Za-z0-9_\-."\'` ]/u', '', $name) . ']';
+    }
+
+    public function quoteConstraint($tableName, $constraintName)
+    {
+        return $this->quoteIdentifier($constraintName);
     }
 
     protected function lastInsertId()
@@ -83,5 +172,10 @@ class MsSqlDriver extends BaseDriver
             . BuildHelper::buildSelectOrder($this, $command, true)
             . "){$order}"
         ;
+    }
+
+    public function getCreateTableStartPart($command)
+    {
+        return 'TABLE ' . ($command->temporary ? '#' : '') . $this->quoteTable($command->tableName);
     }
 }

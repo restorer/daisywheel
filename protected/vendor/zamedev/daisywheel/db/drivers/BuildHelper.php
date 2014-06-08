@@ -46,7 +46,108 @@ class BuildHelper
 
     protected static function buildCreateTableCommand($driver, $command)
     {
-        return 'CREATE TABLE';
+        $list = self::buildCreateTableColumns($driver, $command, array());
+        $list = self::buildCreateTableConstraints($driver, $command, $list);
+
+        $sql = 'CREATE '
+            . $driver->getCreateTableStartPart($command)
+            . ' (' . join(', ', $list) . ')';
+
+        $list = self::buildCreateTableIndices($driver, $command, array($sql));
+        return (count($list) == 1 ? $list[0] : $list);
+    }
+
+    protected static function buildCreateTableIndices($driver, $command, $list)
+    {
+        foreach ($command->indexList as $item) {
+            $list[] = 'CREATE INDEX '
+                . $driver->quoteConstraint($command->tableName, $item['name'])
+                . ' ON '
+                . $driver->quoteTable($command->tableName)
+                . ' ('
+                . join(', ', array_map(function($v) use ($driver) {
+                    return $driver->quoteIdentifier($v);
+                }, $item['columns']))
+                . ')';
+        }
+
+        return $list;
+    }
+
+    protected static function buildCreateTableColumns($driver, $command, $list)
+    {
+        $map = $driver->getColumnTypeMap();
+
+        foreach ($command->columns as $columnPart) {
+            $mapped = $map[$columnPart->columnType];
+            $item = $driver->quoteIdentifier($columnPart->columnName) . ' ' . $mapped['type'];
+
+            if (isset($mapped['supportOptions'])) {
+                if (count($columnPart->columnOptions) < $mapped['supportOptions'][0]) {
+                    throw new InvalidArgumentsException(
+                        "Options count is less than required ({$mapped['supportOptions'][0]}) for column \"{$columnPart->columnName}\""
+                    );
+                }
+
+                if (count($columnPart->columnOptions) > $mapped['supportOptions'][1]) {
+                    throw new InvalidArgumentsException(
+                        "Options count is more than required ({$mapped['supportOptions'][1]}) for column \"{$columnPart->columnName}\""
+                    );
+                }
+
+                $item .= '(' . join(', ', array_map(function($v) use ($driver) {
+                    return $driver->quote($v);
+                }, $columnPart->columnOptions)) . ')';
+            }
+
+            if ((!isset($mapped['supportNotNull']) || $mapped['supportNotNull']) && $columnPart->notNull) {
+                $item .= ' NOT NULL';
+            }
+
+            if ((!isset($mapped['supportDefault']) || $mapped['supportDefault']) && $columnPart->default) {
+               $item .= ' DEFAULT ' . self::buildValuePart($driver, $columnPart->default);
+            }
+
+            $list[] = $item;
+        }
+
+        return $list;
+    }
+
+    protected static function buildCreateTableConstraints($driver, $command, $list)
+    {
+        $optionMap = $driver->getReferenceOptionMap();
+
+        foreach ($command->uniqueList as $item) {
+            $list[] = 'CONSTRAINT '
+                . $driver->quoteConstraint($command->tableName, $item['name'])
+                . ' UNIQUE ('
+                . join(', ', array_map(function($v) use ($driver) {
+                    return $driver->quoteIdentifier($v);
+                }, $item['columns']))
+                . ')';
+        }
+
+        foreach ($command->foreignKeyList as $reference) {
+            $list[] = 'CONSTRAINT '
+                . $driver->quoteConstraint($command->tableName, $reference->constraintName)
+                . ' FOREIGN KEY ('
+                . join(', ', array_map(function($v) use ($driver) {
+                    return $driver->quoteIdentifier($v);
+                }, $reference->columns))
+                . ') REFERENCES '
+                . $driver->quoteTable($reference->refTableName)
+                . ' ('
+                . join(', ', array_map(function($v) use ($driver) {
+                    return $driver->quoteIdentifier($v);
+                }, $reference->refColumns))
+                . ') ON UPDATE '
+                . $optionMap[$reference->onUpdate]
+                . ' ON DELETE '
+                . $optionMap[$reference->onDelete];
+        }
+
+        return $list;
     }
 
     protected static function buildUpdateCommand($driver, $command)

@@ -1,6 +1,6 @@
 <?php
 
-namespace daisywheel\utils;
+namespace daisywheel\core;
 
 class ArrayHelper
 {

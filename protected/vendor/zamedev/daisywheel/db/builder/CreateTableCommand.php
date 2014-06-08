@@ -6,18 +6,18 @@ use daisywheel\core\InvalidArgumentsException;
 
 class CreateTableCommand extends Command
 {
-    protected $table = null;
+    protected $tableName = null;
     protected $temporary = false;
     protected $columns = array();
     protected $uniqueList = array();
     protected $indexList = array();
     protected $foreignKeyList = array();
 
-    public function __construct($driver, $table, $temporary)
+    public function __construct($driver, $tableName, $temporary)
     {
         parent::__construct($driver);
 
-        $this->table = $table;
+        $this->tableName = $tableName;
         $this->temporary = $temporary;
     }
 
@@ -61,7 +61,7 @@ class CreateTableCommand extends Command
 
             $this->uniqueList[] = array(
                 'name' => $argument[0],
-                'columns' => array_slice($argument, 1),
+                'columns' => (is_array($argument[1]) ? $argument[1] : array_slice($argument, 1)),
             );
         }
 
@@ -89,40 +89,28 @@ class CreateTableCommand extends Command
 
             $this->indexList[] = array(
                 'name' => $argument[0],
-                'columns' => array_slice($argument, 1),
+                'columns' => (is_array($argument[1]) ? $argument[1] : array_slice($argument, 1)),
             );
         }
 
         return $this;
     }
 
-    public function foreignKey($name, $column, $reference)
+    public function foreignKey()
     {
-        $arguments = func_get_args();
+        $reference = new ForeignReference($this, func_get_args());
+        $this->foreignKeyList[] = $reference;
+        return $reference;
+    }
 
-        if (count($arguments) && is_array($arguments[0])) {
-            if (count($arguments) > 1) {
-                throw new InvalidArgumentsException();
-            }
+    protected function getTemporary()
+    {
+        return $this->temporary;
+    }
 
-            $arguments = $arguments[0];
-        } else {
-            $arguments = array($arguments);
-        }
-
-        foreach ($arguments as $argument) {
-            if (count($argument) != 3) {
-                throw new InvalidArgumentsException();
-            }
-
-            $this->foreignKeyList[] = array(
-                'name' => $argument[0],
-                'column' => $argument[1],
-                'reference' => $argument[2],
-            );
-        }
-
-        return $this;
+    protected function getTableName()
+    {
+        return $this->tableName;
     }
 
     protected function getColumns()

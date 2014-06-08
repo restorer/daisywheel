@@ -34,6 +34,10 @@ class Object
             return call_user_func_array(array($this, $method), $arguments);
         }
 
+        return $this->unknownMethodCalled($name, $arguments);
+    }
+
+    protected function unknownMethodCalled($name, $arguments) {
         throw new UnknownMethodException('Calling unknown method ' . get_class($this) . "::{$name}");
     }
 }

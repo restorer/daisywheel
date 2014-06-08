@@ -5,25 +5,42 @@ namespace daisywheel\db\builder;
 use daisywheel\core\Object;
 use daisywheel\core\InvalidArgumentsException;
 
-class Reference extends Object
+class ForeignReference extends Object
 {
     const OPTION_RESTRICT = 'RESTRICT';
     const OPTION_CASCADE = 'CASCADE';
     const OPTION_SET_NULL = 'SET_NULL';
 
-    protected $tableName = '';
-    protected $fieldName = '';
+    protected $owner = null;
+    protected $constraintName = '';
+    protected $columns = array();
+    protected $refTableName = '';
+    protected $refColumns = array();
     protected $onDelete = self::OPTION_RESTRICT;
     protected $onUpdate = self::OPTION_RESTRICT;
 
-    public function __construct($arguments)
+    public function __construct($owner, $arguments)
     {
-        if (count($arguments) === 2) {
-            $this->tableName = $arguments[0];
-            $this->fieldName = $arguments[1];
-        } else {
+        if (count($arguments) < 2) {
             throw new InvalidArgumentsException();
         }
+
+        $this->owner = $owner;
+        $this->constraintName = $arguments[0];
+        $this->columns = (is_array($arguments[1]) ? $arguments[1] : array_slice($arguments, 1));
+    }
+
+    public function references() {
+        $arguments = func_get_args();
+
+        if (count($arguments) < 2) {
+            throw new InvalidArgumentsException();
+        }
+
+        $this->refTableName = $arguments[0];
+        $this->refColumns = (is_array($arguments[1]) ? $arguments[1] : array_slice($arguments, 1));
+
+        return $this;
     }
 
     public function onDeleteRestrict()
@@ -62,14 +79,24 @@ class Reference extends Object
         return $this;
     }
 
-    protected function getTableName()
+    protected function getConstraintName()
     {
-        return $this->tableName;
+        return $this->constraintName;
     }
 
-    protected function getFieldName()
+    protected function getColumns()
     {
-        return $this->fieldName;
+        return $this->columns;
+    }
+
+    protected function getRefTableName()
+    {
+        return $this->refTableName;
+    }
+
+    protected function getRefColumns()
+    {
+        return $this->refColumns;
     }
 
     protected function getOnDelete()
@@ -80,5 +107,9 @@ class Reference extends Object
     protected function getOnUpdate()
     {
         return $this->onUpdate;
+    }
+
+    protected function unknownMethodCalled($name, $arguments) {
+        return call_user_func_array(array($this->owner, $name), $arguments);
     }
 }

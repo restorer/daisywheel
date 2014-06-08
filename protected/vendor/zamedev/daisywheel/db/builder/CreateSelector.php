@@ -11,13 +11,17 @@ class CreateSelector
         $this->driver = $driver;
     }
 
-    public function table()
+    public function table($tableName)
     {
-        return new CreateTableCommand($this->driver, new Table(func_get_args()), false);
+        return new CreateTableCommand($this->driver, $tableName, false);
     }
 
-    public function temporaryTable()
+    public function temporaryTable($tableName)
     {
-        return new CreateTableCommand($this->driver, new Table(func_get_args()), true);
+        return new CreateTableCommand($this->driver, $tableName, true);
     }
+
+    // public function index()
+    // {
+    // }
 }

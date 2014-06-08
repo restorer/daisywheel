@@ -88,6 +88,10 @@ abstract class BaseDriver
         return $this->dbh->lastInsertId();
     }
 
+    abstract public function getColumnTypeMap();
+    abstract public function getReferenceOptionMap();
     abstract public function quoteIdentifier($name);
+    abstract public function quoteConstraint($tableName, $constraintName);
     abstract public function applySelectLimit($command, $start, $parts, $order);
+    abstract public function getCreateTableStartPart($command);
 }

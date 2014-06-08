@@ -2,8 +2,6 @@
 
 namespace daisywheel\core;
 
-use daisywheel\utils\ArrayHelper;
-
 class Config
 {
 	protected $env = '';
