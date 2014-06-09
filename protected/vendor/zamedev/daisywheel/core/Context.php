@@ -4,36 +4,48 @@ namespace daisywheel\core;
 
 class Context
 {
+    const CHARSET = 'UTF-8';
+
     protected static $componentMap = array(
         'db' => 'daisywheel\\db\\Connection',
     );
 
-    protected $config = null;
     protected $components = array();
 
     public function __construct($config)
     {
-        mb_internal_encoding('UTF-8');
-        $this->config = $config;
+        mb_internal_encoding(self::CHARSET);
+        $this->components['config'] = $config;
+    }
+
+    public function hasComponent($name)
+    {
+        return array_key_exists($name, $this->components);
+    }
+
+    public function getComponent($name)
+    {
+        return (array_key_exists($name, $this->components) ? $this->components[$name] : null);
+    }
+
+    public function setComponent($name, $component)
+    {
+        if (!($component instanceof Component)) {
+            throw new ComponentNotDefinedException("Component \"$name\" must extend daisywheel\\core\\Component");
+        }
+
+        $this->components[$name] = $component;
+        return $this;
     }
 
     public function __get($name)
     {
-        $method = "get{$name}";
-
-        if (method_exists($this, $method)) {
-            return $this->$method();
-        } elseif (array_key_exists($name, $this->components)) {
+        if (array_key_exists($name, $this->components)) {
             return $this->components[$name];
         } else {
             $this->components[$name] = $this->requireComponent($name);
             return $this->components[$name];
         }
-    }
-
-    protected function getConfig()
-    {
-        return $this->config;
     }
 
     protected function requireComponent($name)

@@ -77,9 +77,19 @@ class Builder
         return new UpdateCommand($this->driver);
     }
 
-    public function create()
+    public function createTable($name)
     {
-        return new CreateSelector($this->driver);
+        return new CreateTableCommand($this->driver, $name, false);
+    }
+
+    public function createTemporaryTable($name)
+    {
+        return new CreateTableCommand($this->driver, $name, true);
+    }
+
+    public function createIndex($name)
+    {
+        return new CreateIndexCommand($this->driver, $name);
     }
 
     public function __call($name, $arguments)

@@ -6,7 +6,7 @@ use daisywheel\core\InvalidArgumentsException;
 
 class CreateTableCommand extends Command
 {
-    protected $tableName = null;
+    protected $tableName = '';
     protected $temporary = false;
     protected $columns = array();
     protected $uniqueList = array();

@@ -3,6 +3,7 @@
 namespace daisywheel\db\drivers;
 
 use daisywheel\db\builder\ColumnPart;
+use daisywheel\db\builder\CreateIndexCommand;
 use daisywheel\db\builder\CreateTableCommand;
 use daisywheel\db\builder\DeleteCommand;
 use daisywheel\db\builder\ExpressionPart;
@@ -28,6 +29,8 @@ class BuildHelper
             return self::buildUpdateCommand($driver, $command);
         } elseif ($command instanceof CreateTableCommand) {
             return self::buildCreateTableCommand($driver, $command);
+        } elseif ($command instanceof CreateIndexCommand) {
+            return self::buildCreateIndexCommand($driver, $command);
         } else {
             throw new InvalidArgumentsException();
         }
@@ -42,6 +45,11 @@ class BuildHelper
         return $prepend . join($join, array_map(function($v) use ($driver) {
             return self::buildPart($driver, $v);
         }, $list));
+    }
+
+    protected static function buildCreateIndexCommand($driver, $command)
+    {
+        return self::buildCreateIndexPart($driver, $command->indexName, $command->tableName, $command->columnNames);
     }
 
     protected static function buildCreateTableCommand($driver, $command)
@@ -60,18 +68,23 @@ class BuildHelper
     protected static function buildCreateTableIndices($driver, $command, $list)
     {
         foreach ($command->indexList as $item) {
-            $list[] = 'CREATE INDEX '
-                . $driver->quoteConstraint($command->tableName, $item['name'])
-                . ' ON '
-                . $driver->quoteTable($command->tableName)
-                . ' ('
-                . join(', ', array_map(function($v) use ($driver) {
-                    return $driver->quoteIdentifier($v);
-                }, $item['columns']))
-                . ')';
+            $list[] = self::buildCreateIndexPart($item['name'], $command->tableName, $item['columns']);
         }
 
         return $list;
+    }
+
+    protected static function buildCreateIndexPart($driver, $indexName, $tableName, $columnNames)
+    {
+        return 'CREATE INDEX '
+            . $driver->quoteConstraint($tableName, $indexName)
+            . ' ON '
+            . $driver->quoteTable($tableName)
+            . ' ('
+            . join(', ', array_map(function($v) use ($driver) {
+                return $driver->quoteIdentifier($v);
+            }, $columnNames))
+            . ')';
     }
 
     protected static function buildCreateTableColumns($driver, $command, $list)
