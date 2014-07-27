@@ -13,7 +13,7 @@ class InsertCommand extends Command
 
     public function into()
     {
-        $this->into = new Table(func_get_args());
+        $this->into = Table::create(func_get_args());
         return $this;
     }
 

@@ -9,13 +9,13 @@ class DeleteCommand extends Command
 
     public function from()
     {
-        $this->from = new Table(func_get_args());
+        $this->from = Table::create(func_get_args());
         return $this;
     }
 
-    public function where()
+    public function where($expression)
     {
-        $this->where = ExpressionPart::create(func_get_args());
+        $this->where = $expression;
         return $this;
     }
 

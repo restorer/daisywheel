@@ -51,7 +51,7 @@ class SelectCommand extends CommandWithAlias implements Part
 
     public function from()
     {
-        $this->fromList[] = new Table(func_get_args());
+        $this->fromList[] = Table::create(func_get_args());
         return $this;
     }
 
@@ -76,9 +76,9 @@ class SelectCommand extends CommandWithAlias implements Part
         return $join;
     }
 
-    public function where()
+    public function where($expression)
     {
-        $this->where = ExpressionPart::create(func_get_args());
+        $this->where = $expression;
         return $this;
     }
 
@@ -88,9 +88,9 @@ class SelectCommand extends CommandWithAlias implements Part
         return $this;
     }
 
-    public function having()
+    public function having($expression)
     {
-        $this->having = ExpressionPart::create(func_get_args());
+        $this->having = $expression;
         return $this;
     }
 

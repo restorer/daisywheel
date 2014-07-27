@@ -2,6 +2,8 @@
 
 namespace daisywheel\core;
 
+// Currently, context implements service locator pattern.
+// While it may be considered as anti-pattern, we think that it simplifies rapid development.
 class Context
 {
     const CHARSET = 'UTF-8';

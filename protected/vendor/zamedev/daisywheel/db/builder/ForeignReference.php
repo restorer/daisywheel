@@ -14,7 +14,7 @@ class ForeignReference extends Object
     protected $owner = null;
     protected $constraintName = '';
     protected $columns = array();
-    protected $refTableName = '';
+    protected $refTable = null;
     protected $refColumns = array();
     protected $onDelete = self::OPTION_RESTRICT;
     protected $onUpdate = self::OPTION_RESTRICT;
@@ -37,7 +37,7 @@ class ForeignReference extends Object
             throw new InvalidArgumentsException();
         }
 
-        $this->refTableName = $arguments[0];
+        $this->refTable = Table::create($arguments[0]);
         $this->refColumns = (is_array($arguments[1]) ? $arguments[1] : array_slice($arguments, 1));
 
         return $this;
@@ -89,9 +89,9 @@ class ForeignReference extends Object
         return $this->columns;
     }
 
-    protected function getRefTableName()
+    protected function getRefTable()
     {
-        return $this->refTableName;
+        return $this->refTable;
     }
 
     protected function getRefColumns()

@@ -6,19 +6,16 @@ use daisywheel\core\InvalidArgumentsException;
 
 class CreateTableCommand extends Command
 {
-    protected $tableName = '';
-    protected $temporary = false;
+    protected $table = null;
     protected $columns = array();
     protected $uniqueList = array();
     protected $indexList = array();
     protected $foreignKeyList = array();
 
-    public function __construct($driver, $tableName, $temporary)
+    public function __construct($driver, $table)
     {
         parent::__construct($driver);
-
-        $this->tableName = $tableName;
-        $this->temporary = $temporary;
+        $this->table = Table::create($table);
     }
 
     public function columns()
@@ -103,14 +100,9 @@ class CreateTableCommand extends Command
         return $reference;
     }
 
-    protected function getTemporary()
+    protected function getTable()
     {
-        return $this->temporary;
-    }
-
-    protected function getTableName()
-    {
-        return $this->tableName;
+        return $this->table;
     }
 
     protected function getColumns()

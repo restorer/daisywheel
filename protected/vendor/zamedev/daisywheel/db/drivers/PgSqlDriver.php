@@ -99,7 +99,7 @@ class PgSqlDriver extends BaseDriver
         }
     }
 
-    public function quoteIdentifier($name)
+    public function quoteIdentifier($name, $temporary=false)
     {
         return '"' . str_replace('"', '""', preg_replace('/[^A-Za-z0-9_\-."\'` ]/u', '', $name)) . '"';
     }
@@ -133,8 +133,18 @@ class PgSqlDriver extends BaseDriver
         return $result;
     }
 
-    public function getCreateTableStartPart($command)
+    public function buildCreateTableStartPart($command)
     {
-        return ($command->temporary ? 'TEMPORARY ' : '') . 'TABLE ' . $this->quoteTable($command->tableName);
+        return ($command->table->temporary ? 'TEMPORARY ' : '') . 'TABLE ' . $this->quoteTable($command->table->name);
+    }
+
+    public function buildDropIndexEndPart($command)
+    {
+        return '';
+    }
+
+    public function buildTruncateTableCommand($command)
+    {
+        return parent::buildTruncateTableCommand($command) . ' RESTART IDENTITY';
     }
 }

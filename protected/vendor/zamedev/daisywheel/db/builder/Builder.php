@@ -6,6 +6,26 @@ use daisywheel\core\UnknownMethodException;
 
 class Builder
 {
+    protected static $supportedOperators = array(
+        ExpressionPart::OPERATOR_EQ => true,
+        ExpressionPart::OPERATOR_NEQ => true,
+        ExpressionPart::OPERATOR_GT => true,
+        ExpressionPart::OPERATOR_GTE => true,
+        ExpressionPart::OPERATOR_LT => true,
+        ExpressionPart::OPERATOR_LTE => true,
+        ExpressionPart::OPERATOR_IN => true,
+        ExpressionPart::OPERATOR_NOTIN => true,
+        ExpressionPart::OPERATOR_IS => true,
+        ExpressionPart::OPERATOR_ISNOT => true,
+        ExpressionPart::OPERATOR_ADD => true,
+        ExpressionPart::OPERATOR_SUB => true,
+        ExpressionPart::OPERATOR_MUL => true,
+        ExpressionPart::OPERATOR_DIV => true,
+        ExpressionPart::OPERATOR_NEG => true,
+        ExpressionPart::OPERATOR_NOT => true,
+        ExpressionPart::OPERATOR_BETWEEN => true,
+    );
+
     protected static $supportedFunctions = array(
         FunctionPart::TYPE_AVG => true,
         FunctionPart::TYPE_COUNT => true,
@@ -37,24 +57,14 @@ class Builder
         return ColumnPart::create(func_get_args());
     }
 
-    public function e()
-    {
-        return ExpressionPart::create(func_get_args());
-    }
-
     public function v()
     {
         return ValuePart::create(func_get_args());
     }
 
-    public function ref()
+    public function temp($name)
     {
-        return new Reference(func_get_args());
-    }
-
-    public function not()
-    {
-        return ExpressionPart::create(array('NOT', ExpressionPart::create(func_get_args())));
+        return Table::createTemporary($name);
     }
 
     public function select()
@@ -79,12 +89,7 @@ class Builder
 
     public function createTable($name)
     {
-        return new CreateTableCommand($this->driver, $name, false);
-    }
-
-    public function createTemporaryTable($name)
-    {
-        return new CreateTableCommand($this->driver, $name, true);
+        return new CreateTableCommand($this->driver, $name);
     }
 
     public function createIndex($name)
@@ -92,12 +97,31 @@ class Builder
         return new CreateIndexCommand($this->driver, $name);
     }
 
+    public function dropTable($name)
+    {
+        return new DropTableCommand($this->driver, $name);
+    }
+
+    public function dropIndex($name)
+    {
+        return new DropIndexCommand($this->driver, $name);
+    }
+
+    public function truncateTable($name)
+    {
+        return new TruncateTableCommand($this->driver, $name);
+    }
+
     public function __call($name, $arguments)
     {
-        $funcName = mb_strtoupper($name);
+        $upperName = mb_strtoupper($name);
 
-        if (isset(self::$supportedFunctions[$funcName])) {
-            return new FunctionPart($funcName, $arguments);
+        if (isset(self::$supportedOperators[$upperName])) {
+            return new ExpressionPart($upperName, $arguments);
+        }
+
+        if (isset(self::$supportedFunctions[$upperName])) {
+            return new FunctionPart($upperName, $arguments);
         }
 
         throw new UnknownMethodException('Calling unknown method ' . get_class($this) . "::{$name}");

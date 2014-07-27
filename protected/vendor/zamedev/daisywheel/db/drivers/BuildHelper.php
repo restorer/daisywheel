@@ -6,11 +6,14 @@ use daisywheel\db\builder\ColumnPart;
 use daisywheel\db\builder\CreateIndexCommand;
 use daisywheel\db\builder\CreateTableCommand;
 use daisywheel\db\builder\DeleteCommand;
+use daisywheel\db\builder\DropIndexCommand;
+use daisywheel\db\builder\DropTableCommand;
 use daisywheel\db\builder\ExpressionPart;
 use daisywheel\db\builder\FunctionPart;
 use daisywheel\db\builder\InsertCommand;
 use daisywheel\db\builder\PartWithAlias;
 use daisywheel\db\builder\SelectCommand;
+use daisywheel\db\builder\TruncateTableCommand;
 use daisywheel\db\builder\UpdateCommand;
 use daisywheel\db\builder\ValuePart;
 use daisywheel\core\InvalidArgumentsException;
@@ -31,6 +34,12 @@ class BuildHelper
             return self::buildCreateTableCommand($driver, $command);
         } elseif ($command instanceof CreateIndexCommand) {
             return self::buildCreateIndexCommand($driver, $command);
+        } elseif ($command instanceof DropTableCommand) {
+            return self::buildDropTableCommand($driver, $command);
+        } elseif ($command instanceof DropIndexCommand) {
+            return self::buildDropIndexCommand($driver, $command);
+        } elseif ($command instanceof TruncateTableCommand) {
+            return self::buildTruncateTableCommand($driver, $command);
         } else {
             throw new InvalidArgumentsException();
         }
@@ -47,9 +56,27 @@ class BuildHelper
         }, $list));
     }
 
+    protected static function buildTruncateTableCommand($driver, $command)
+    {
+        return $driver->buildTruncateTableCommand($command);
+    }
+
+    protected static function buildDropIndexCommand($driver, $command)
+    {
+        return 'DROP INDEX '
+            . $driver->quoteConstraint($command->table->name, $command->indexName)
+            . $driver->buildDropIndexEndPart($command);
+    }
+
+    protected static function buildDropTableCommand($driver, $command)
+    {
+        return 'DROP '
+            . $driver->buildDropTableStartPart($command);
+    }
+
     protected static function buildCreateIndexCommand($driver, $command)
     {
-        return self::buildCreateIndexPart($driver, $command->indexName, $command->tableName, $command->columnNames);
+        return self::buildCreateIndexPart($driver, $command->indexName, $command->table, $command->columnNames);
     }
 
     protected static function buildCreateTableCommand($driver, $command)
@@ -58,8 +85,9 @@ class BuildHelper
         $list = self::buildCreateTableConstraints($driver, $command, $list);
 
         $sql = 'CREATE '
-            . $driver->getCreateTableStartPart($command)
-            . ' (' . join(', ', $list) . ')';
+            . $driver->buildCreateTableStartPart($command)
+            . ' (' . join(', ', $list) . ')'
+            . $driver->buildCreateTableEndPart($command);
 
         $list = self::buildCreateTableIndices($driver, $command, array($sql));
         return (count($list) == 1 ? $list[0] : $list);
@@ -68,18 +96,18 @@ class BuildHelper
     protected static function buildCreateTableIndices($driver, $command, $list)
     {
         foreach ($command->indexList as $item) {
-            $list[] = self::buildCreateIndexPart($item['name'], $command->tableName, $item['columns']);
+            $list[] = self::buildCreateIndexPart($driver, $item['name'], $command->table, $item['columns']);
         }
 
         return $list;
     }
 
-    protected static function buildCreateIndexPart($driver, $indexName, $tableName, $columnNames)
+    protected static function buildCreateIndexPart($driver, $indexName, $table, $columnNames)
     {
         return 'CREATE INDEX '
-            . $driver->quoteConstraint($tableName, $indexName)
+            . $driver->quoteConstraint($table->name, $indexName)
             . ' ON '
-            . $driver->quoteTable($tableName)
+            . $driver->quoteTable($table->name, $table->temporary)
             . ' ('
             . join(', ', array_map(function($v) use ($driver) {
                 return $driver->quoteIdentifier($v);
@@ -133,7 +161,7 @@ class BuildHelper
 
         foreach ($command->uniqueList as $item) {
             $list[] = 'CONSTRAINT '
-                . $driver->quoteConstraint($command->tableName, $item['name'])
+                . $driver->quoteConstraint($command->table->name, $item['name'])
                 . ' UNIQUE ('
                 . join(', ', array_map(function($v) use ($driver) {
                     return $driver->quoteIdentifier($v);
@@ -143,13 +171,13 @@ class BuildHelper
 
         foreach ($command->foreignKeyList as $reference) {
             $list[] = 'CONSTRAINT '
-                . $driver->quoteConstraint($command->tableName, $reference->constraintName)
+                . $driver->quoteConstraint($command->table->name, $reference->constraintName)
                 . ' FOREIGN KEY ('
                 . join(', ', array_map(function($v) use ($driver) {
                     return $driver->quoteIdentifier($v);
                 }, $reference->columns))
                 . ') REFERENCES '
-                . $driver->quoteTable($reference->refTableName)
+                . $driver->quoteTable($reference->refTable->name, $reference->refTable->temporary)
                 . ' ('
                 . join(', ', array_map(function($v) use ($driver) {
                     return $driver->quoteIdentifier($v);
@@ -308,7 +336,7 @@ class BuildHelper
 
     protected static function buildTable($driver, $table)
     {
-        $result = $driver->quoteTable($table->name);
+        $result = $driver->quoteTable($table->name, $table->temporary);
 
         if ($table->asName != '') {
             $result .= ' AS ' . $driver->quoteIdentifier($table->asName);
@@ -343,52 +371,51 @@ class BuildHelper
     protected static function buildExpressionPart($driver, $part)
     {
         $operator = $part->operator;
+        $sqlOperator = $part->sqlOperator;
         $operands = $part->operands;
 
-        if (count($operands) === 1) {
-            $result = "{$operator} " . self::buildPart($driver, $operands[0]);
-        } else if (count($operands) === 3) {
-            if ($operator !== 'BETWEEN') {
-                throw new BuildException("Unsupported ternary operator \"{$operator}\"");
-            }
-
+        if ($operator === ExpressionPart::OPERATOR_BETWEEN) {
             $result = self::buildPart($driver, $operands[0])
-                . ' BETWEEN '
+                . " {$sqlOperator} "
                 . self::buildPart($driver, $operands[1])
                 . ' AND '
                 . self::buildPart($driver, $operands[2])
             ;
-        } elseif (($operator === 'IN' || $operator === 'NOT IN') && ($operands[1] instanceof ValuePart)) {
+        } elseif (($operator === ExpressionPart::OPERATOR_IN || $operator === ExpressionPart::OPERATOR_NOTIN)
+            && ($operands[1] instanceof ValuePart)
+        ) {
             $value = $operands[1]->value;
 
             if (!is_array($value)) {
-                throw new BuildException('Right operand for '
+                throw new BuildException('Right operand for "'
                     . $operator
-                    . ' operator must be an array (but it is "'
+                    . '" operator must be an array (but it is "'
                     . gettype($value)
                     . '"'
                 );
             }
 
             if (count($value)) {
-                $result = self::buildPart($driver, $operands[0]) . " {$operator} (" . join(', ', array_map(function($v) use ($driver) {
+                $result = self::buildPart($driver, $operands[0]) . " {$sqlOperator} (" . join(', ', array_map(function($v) use ($driver) {
                     return $driver->quote($v);
                 }, $value)) . ')';
-            } elseif ($operator === 'IN') {
+            } elseif ($operator === ExpressionPart::OPERATOR_IN) {
                 $result = '1 = 2';
             } else {
                 $result = '1 = 1';
             }
+        } elseif (count($operands) === 1) {
+            $result = "{$sqlOperator} " . self::buildPart($driver, $operands[0]);
         } else {
             $leftOperand = self::buildPart($driver, $operands[0]);
             $rightOperandIsNull = (($operands[1] instanceof ValuePart) && $operands[1]->value === null);
 
-            if ($operator === 'IS' || $operator === '==' && $rightOperandIsNull) {
+            if ($operator === ExpressionPart::OPERATOR_IS || $operator === ExpressionPart::OPERATOR_EQ && $rightOperandIsNull) {
                 $result = "{$leftOperand} IS NULL";
-            } elseif ($operator === 'IS NOT' || $operator === '<>' && $rightOperandIsNull) {
+            } elseif ($operator === ExpressionPart::OPERATOR_ISNOT || $operator === ExpressionPart::OPERATOR_NEQ && $rightOperandIsNull) {
                 $result = "{$leftOperand} IS NOT NULL";
             } else {
-                $result = "{$leftOperand} {$operator} " . self::buildPart($driver, $operands[1]);
+                $result = "{$leftOperand} {$sqlOperator} " . self::buildPart($driver, $operands[1]);
             }
         }
 
@@ -413,8 +440,8 @@ class BuildHelper
             $result = $driver->quoteIdentifier($part->columnName);
         }
 
-        if ($part->tableName != '') {
-            $result = $driver->quoteTable($part->tableName) . '.' . $result;
+        if ($part->table) {
+            $result = $driver->quoteTable($part->table->name, $part->table->temporary) . '.' . $result;
         }
 
         return $result;

@@ -6,60 +6,101 @@ use daisywheel\core\InvalidArgumentsException;
 
 class ExpressionPart extends PartWithAlias
 {
+    const OPERATOR_EQ = 'EQ';
+    const OPERATOR_NEQ = 'NEQ';
+    const OPERATOR_GT = 'GT';
+    const OPERATOR_GTE = 'GTE';
+    const OPERATOR_LT = 'LT';
+    const OPERATOR_LTE = 'LTE';
+    const OPERATOR_IN = 'IN';
+    const OPERATOR_NOTIN = 'NOTIN';
+    const OPERATOR_IS = 'IS';
+    const OPERATOR_ISNOT = 'ISNOT';
+    const OPERATOR_ADD = 'ADD';
+    const OPERATOR_SUB = 'SUB';
+    const OPERATOR_MUL = 'MUL';
+    const OPERATOR_DIV = 'DIV';
+    const OPERATOR_NEG = 'NEG';
+    const OPERATOR_NOT = 'NOT';
+    const OPERATOR_BETWEEN = 'BETWEEN';
+
     const RELATION_AND = 'AND';
     const RELATION_OR = 'OR';
+
+    protected static $operatorOperandsCountMap = array(
+        self::OPERATOR_EQ => 2,
+        self::OPERATOR_NEQ => 2,
+        self::OPERATOR_GT => 2,
+        self::OPERATOR_GTE => 2,
+        self::OPERATOR_LT => 2,
+        self::OPERATOR_LTE => 2,
+        self::OPERATOR_IN => 2,
+        self::OPERATOR_NOTIN => 2,
+        self::OPERATOR_IS => 2,
+        self::OPERATOR_ISNOT => 2,
+        self::OPERATOR_ADD => 2,
+        self::OPERATOR_SUB => 2,
+        self::OPERATOR_MUL => 2,
+        self::OPERATOR_DIV => 2,
+        self::OPERATOR_NEG => 1,
+        self::OPERATOR_NOT => 1,
+        self::OPERATOR_BETWEEN => 3,
+    );
+
+    protected static $operatorSqlOperatorMap = array(
+        self::OPERATOR_EQ => '=',
+        self::OPERATOR_NEQ => '<>',
+        self::OPERATOR_GT => '>',
+        self::OPERATOR_GTE => '>=',
+        self::OPERATOR_LT => '<',
+        self::OPERATOR_LTE => '<=',
+        self::OPERATOR_IN => 'IN',
+        self::OPERATOR_NOTIN => 'NOT IN',
+        self::OPERATOR_IS => 'IS',
+        self::OPERATOR_ISNOT => 'IS NOT',
+        self::OPERATOR_ADD => '+',
+        self::OPERATOR_SUB => '-',
+        self::OPERATOR_MUL => '*',
+        self::OPERATOR_DIV => '/',
+        self::OPERATOR_NEG => '-',
+        self::OPERATOR_NOT => 'NOT',
+        self::OPERATOR_BETWEEN => 'BETWEEN',
+    );
 
     protected $operator = null;
     protected $operands = array();
     protected $relations = array();
 
-    protected function __construct($arguments)
+    public function __construct($operator, $operands)
     {
-        if (count($arguments) === 4) {
-            $this->operator = mb_strtoupper($arguments[1]);
+        $this->operator = mb_strtoupper($operator);
 
-            $this->operands = array(
-                ValuePart::create(array($arguments[0])),
-                ValuePart::create(array($arguments[2])),
-                ValuePart::create(array($arguments[3])),
-            );
-        } elseif (count($arguments) === 3) {
-            $this->operator = mb_strtoupper($arguments[1]);
-
-            $this->operands = array(
-                ValuePart::create(array($arguments[0])),
-                ValuePart::create(array($arguments[2])),
-            );
-        } elseif (count($arguments) === 2) {
-            $this->operator = mb_strtoupper($arguments[0]);
-
-            $this->operands = array(
-                ValuePart::create(array($arguments[1])),
-            );
-        } else {
+        if (!isset(self::$operatorOperandsCountMap[$this->operator])
+            || self::$operatorOperandsCountMap[$this->operator] != count($operands)
+        ) {
             throw new InvalidArgumentsException();
         }
 
-        if (!is_string($this->operator)) {
-            throw new InvalidArgumentsException();
-        }
+        $this->operands = array_map(function($v) {
+            return ValuePart::create(array($v));
+        }, $operands);
     }
 
-    protected function magicAnd()
+    protected function magicAnd($expression)
     {
         $this->relations[] = array(
             'type' => self::RELATION_AND,
-            'expression' => self::create(func_get_args()),
+            'expression' => $expression,
         );
 
         return $this;
     }
 
-    protected function magicOr()
+    protected function magicOr($expression)
     {
         $this->relations[] = array(
             'type' => self::RELATION_OR,
-            'expression' => self::create(func_get_args()),
+            'expression' => $expression,
         );
 
         return $this;
@@ -70,6 +111,11 @@ class ExpressionPart extends PartWithAlias
         return $this->operator;
     }
 
+    protected function getSqlOperator()
+    {
+        return self::$operatorSqlOperatorMap[$this->operator];
+    }
+
     protected function getOperands()
     {
         return $this->operands;
@@ -78,14 +124,5 @@ class ExpressionPart extends PartWithAlias
     protected function getRelations()
     {
         return $this->relations;
-    }
-
-    public static function create($arguments)
-    {
-        if (count($arguments) === 1 && ($arguments[0] instanceof ExpressionPart)) {
-            return $arguments[0];
-        } else {
-            return new self($arguments);
-        }
     }
 }

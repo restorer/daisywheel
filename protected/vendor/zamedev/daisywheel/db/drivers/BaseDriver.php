@@ -24,9 +24,9 @@ abstract class BaseDriver
         return $this->dbh->quote($value);
     }
 
-    public function quoteTable($name)
+    public function quoteTable($name, $temporary=false)
     {
-        return $this->quoteIdentifier($this->connection->prefix . $name);
+        return $this->quoteIdentifier($this->connection->prefix . $name, $temporary);
     }
 
     public function queryAll($sql, $params=array())
@@ -83,6 +83,21 @@ abstract class BaseDriver
         return "{$part->type}(" . BuildHelper::buildPartList($this, $part->arguments) . ')';
     }
 
+    public function buildCreateTableEndPart($command)
+    {
+        return '';
+    }
+
+    public function buildDropTableStartPart($command)
+    {
+        return 'TABLE ' . $this->quoteTable($command->table->name, $command->table->temporary);
+    }
+
+    public function buildTruncateTableCommand($command)
+    {
+        return 'TRUNCATE TABLE ' . $this->quoteTable($command->table->name, $command->table->temporary);
+    }
+
     protected function lastInsertId()
     {
         return $this->dbh->lastInsertId();
@@ -90,8 +105,9 @@ abstract class BaseDriver
 
     abstract public function getColumnTypeMap();
     abstract public function getReferenceOptionMap();
-    abstract public function quoteIdentifier($name);
+    abstract public function quoteIdentifier($name, $temporary);
     abstract public function quoteConstraint($tableName, $constraintName);
     abstract public function applySelectLimit($command, $start, $parts, $order);
-    abstract public function getCreateTableStartPart($command);
+    abstract public function buildCreateTableStartPart($command);
+    abstract public function buildDropIndexEndPart($command);
 }

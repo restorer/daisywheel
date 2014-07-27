@@ -6,6 +6,9 @@ use daisywheel\db\builder\ColumnPart;
 use daisywheel\db\builder\ForeignReference;
 use daisywheel\db\builder\FunctionPart;
 
+// TODO:
+// Drop table - restrict if constraint exists [ pragma table_info('tablename') , pragma foreign_key_list('tablename') ]
+
 class SqliteDriver extends BaseDriver
 {
     public function getColumnTypeMap()
@@ -94,9 +97,10 @@ class SqliteDriver extends BaseDriver
     {
         parent::connect($dsn, $username, $password, $driverOptions, $charset);
         $this->dbh->exec('PRAGMA foreign_keys=ON');
+        // PRAGMA encoding="UTF-8"
     }
 
-    public function quoteIdentifier($name)
+    public function quoteIdentifier($name, $temporary=false)
     {
         return '"' . str_replace('"', '""', preg_replace('/[^A-Za-z0-9_\-."\'` ]/u', '', $name)) . '"';
     }
@@ -128,8 +132,21 @@ class SqliteDriver extends BaseDriver
         return $result;
     }
 
-    public function getCreateTableStartPart($command)
+    public function buildCreateTableStartPart($command)
     {
-        return ($command->temporary ? 'TEMPORARY ' : '') . 'TABLE ' . $this->quoteTable($command->tableName);
+        return ($command->table->temporary ? 'TEMPORARY ' : '') . 'TABLE ' . $this->quoteTable($command->table->name);
+    }
+
+    public function buildDropIndexEndPart($command)
+    {
+        return '';
+    }
+
+    public function buildTruncateTableCommand($command)
+    {
+        return array(
+            'DELETE FROM ' . $this->quoteTable($command->table->name),
+            'DELETE FROM SQLITE_SEQUENCE WHERE name=' . $this->quote($command->table->name),
+        );
     }
 }

@@ -105,9 +105,9 @@ class MsSqlDriver extends BaseDriver
         parent::connect($dsn, $username, $password, $driverOptions, $charset);
     }
 
-    public function quoteIdentifier($name)
+    public function quoteIdentifier($name, $temporary=false)
     {
-        return '[' . preg_replace('/[^A-Za-z0-9_\-."\'` ]/u', '', $name) . ']';
+        return '[' . ($temporary ? '#' : '') . preg_replace('/[^A-Za-z0-9_\-."\'` ]/u', '', $name) . ']';
     }
 
     public function quoteConstraint($tableName, $constraintName)
@@ -174,8 +174,13 @@ class MsSqlDriver extends BaseDriver
         ;
     }
 
-    public function getCreateTableStartPart($command)
+    public function buildCreateTableStartPart($command)
     {
-        return 'TABLE ' . ($command->temporary ? '#' : '') . $this->quoteTable($command->tableName);
+        return 'TABLE ' . $this->quoteTable($command->table->name, $command->table->temporary);
+    }
+
+    public function buildDropIndexEndPart($command)
+    {
+        return ' ON ' . $this->quoteTable($command->table->name, $command->table->temporary);
     }
 }

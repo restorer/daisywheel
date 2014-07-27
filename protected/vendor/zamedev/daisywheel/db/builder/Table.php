@@ -7,19 +7,20 @@ use daisywheel\core\InvalidArgumentsException;
 
 class Table extends Object
 {
+    protected $temporary = false;
     protected $name = null;
     protected $asName = '';
 
-    public function __construct($arguments)
+    protected function __construct($temporary, $name, $asName)
     {
-        if (count($arguments) === 2) {
-            $this->name = $arguments[0];
-            $this->asName = $arguments[1];
-        } elseif (count($arguments) === 1) {
-            $this->name = $arguments[0];
-        } else {
-            throw new InvalidArgumentsException();
-        }
+        $this->temporary = $temporary;
+        $this->name = $name;
+        $this->asName = $asName;
+    }
+
+    protected function getTemporary()
+    {
+        return $this->temporary;
     }
 
     protected function getName()
@@ -30,5 +31,33 @@ class Table extends Object
     protected function getAsName()
     {
         return $this->asName;
+    }
+
+    public static function createTemporary($name)
+    {
+        return new self(true, $name, '');
+    }
+
+    public static function create($arguments)
+    {
+        if ($arguments instanceof Table) {
+            return $arguments;
+        } elseif (!is_array($arguments)) {
+            return new self(false, $arguments, '');
+        } elseif (count($arguments) === 1) {
+            if ($arguments[0] instanceof Table) {
+                return $arguments[0];
+            } else {
+                return new self(false, $arguments[0], '');
+            }
+        } elseif (count($arguments) === 2) {
+            if ($arguments[0] instanceof Table) {
+                return new self($arguments[0]->temporary, $arguments[0]->name, $arguments[1]);
+            } else {
+                return new self(false, $arguments[0], $arguments[1]);
+            }
+        } else {
+            throw new InvalidArgumentsException();
+        }
     }
 }

@@ -102,7 +102,7 @@ class MySqlDriver extends BaseDriver
         }
     }
 
-    public function quoteIdentifier($name)
+    public function quoteIdentifier($name, $temporary=false)
     {
         return '`' . str_replace('`', '``', preg_replace('/[^A-Za-z0-9_\-."\'` ]/u', '', $name)) . '`';
     }
@@ -136,8 +136,24 @@ class MySqlDriver extends BaseDriver
         }
     }
 
-    public function getCreateTableStartPart($command)
+    public function buildCreateTableStartPart($command)
     {
-        return ($command->temporary ? 'TEMPORARY ' : '') . 'TABLE ' . $this->quoteTable($command->tableName);
+        return ($command->table->temporary ? 'TEMPORARY ' : '') . 'TABLE ' . $this->quoteTable($command->table->name);
+    }
+
+    public function buildCreateTableEndPart($command)
+    {
+        // TODO: utf8 character set and collation
+        return ' ENGINE=InnoDB';
+    }
+
+    public function buildDropTableStartPart($command)
+    {
+        return ($command->table->temporary ? 'TEMPORARY ' : '') . 'TABLE ' . $this->quoteTable($command->table->name);
+    }
+
+    public function buildDropIndexEndPart($command)
+    {
+        return ' ON ' . $this->quoteTable($command->table->name, $command->table->temporary);
     }
 }

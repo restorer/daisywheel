@@ -20,12 +20,12 @@ class JoinTable extends Object
     {
         $this->selectCommand = $selectCommand;
         $this->type = $type;
-        $this->table = new Table($arguments);
+        $this->table = Table::create($arguments);
     }
 
-    public function on()
+    public function on($expression)
     {
-        $this->onCondition = ExpressionPart::create(func_get_args());
+        $this->onCondition = $expression;
         return $this->selectCommand;
     }
 

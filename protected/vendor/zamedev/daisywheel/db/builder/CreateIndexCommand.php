@@ -7,7 +7,7 @@ use daisywheel\core\InvalidArgumentsException;
 class CreateIndexCommand extends Command
 {
     protected $indexName = '';
-    protected $tableName = '';
+    protected $table = null;
     protected $columnNames = array();
 
     public function __construct($driver, $indexName)
@@ -16,9 +16,9 @@ class CreateIndexCommand extends Command
         $this->indexName = $indexName;
     }
 
-    public function on($tableName)
+    public function on($table)
     {
-        $this->tableName = $tableName;
+        $this->table = Table::create($table);
         return $this;
     }
 
@@ -43,9 +43,9 @@ class CreateIndexCommand extends Command
         return $this->indexName;
     }
 
-    public function getTableName()
+    public function getTable()
     {
-        return $this->tableName;
+        return $this->table;
     }
 
     public function getColumnNames()

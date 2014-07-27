@@ -12,7 +12,7 @@ class UpdateCommand extends Command
 
     public function table()
     {
-        $this->table = new Table(func_get_args());
+        $this->table = Table::create(func_get_args());
         return $this;
     }
 
@@ -44,9 +44,9 @@ class UpdateCommand extends Command
         return $this;
     }
 
-    public function where()
+    public function where($expression)
     {
-        $this->where = ExpressionPart::create(func_get_args());
+        $this->where = $expression;
         return $this;
     }
 

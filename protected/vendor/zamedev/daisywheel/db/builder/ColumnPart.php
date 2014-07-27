@@ -50,7 +50,7 @@ class ColumnPart extends PartWithAlias
         self::TYPE_LONGBLOB => true,
     );
 
-    protected $tableName = '';
+    protected $table = null;
     protected $columnName = '';
     protected $columnType = null;
     protected $columnOptions = array();
@@ -60,7 +60,7 @@ class ColumnPart extends PartWithAlias
     protected function __construct($arguments)
     {
         if (count($arguments) === 2) {
-            $this->tableName = $arguments[0];
+            $this->table = Table::create($arguments[0]);
             $this->columnName = $arguments[1];
         } elseif (count($arguments) === 1) {
             $this->columnName = $arguments[0];
@@ -81,9 +81,9 @@ class ColumnPart extends PartWithAlias
         return $this;
     }
 
-    protected function getTableName()
+    protected function getTable()
     {
-        return $this->tableName;
+        return $this->table;
     }
 
     protected function getColumnName()
