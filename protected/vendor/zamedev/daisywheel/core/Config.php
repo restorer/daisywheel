@@ -5,7 +5,7 @@ namespace daisywheel\core;
 class Config
 {
 	protected $env = '';
-	protected $entries = array();
+	protected $entries = [];
 
 	public function __construct($entries, $env='')
 	{
@@ -50,19 +50,19 @@ class Config
 
 	public function slice($path)
 	{
-		$subEntries = $this->get($path, array());
+		$subEntries = $this->get($path, []);
 
 		if (is_array($subEntries)) {
 			return new self($subEntries, $this->env);
 		}
 
-		return new self(array(), $this->env);
+		return new self([], $this->env);
 	}
 
 	public function remove($what)
 	{
 		if (is_string($what)) {
-			$what = array($what);
+			$what = [$what];
 		}
 
 		foreach ($what as $key) {

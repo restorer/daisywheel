@@ -15,6 +15,11 @@ class Object
         }
     }
 
+    public function __isset($name)
+    {
+        return method_exists($this, "get{$name}");
+    }
+
     public function __set($name, $value)
     {
         $method = "set{$name}";

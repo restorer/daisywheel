@@ -7,7 +7,7 @@ use daisywheel\core\InvalidArgumentsException;
 class UpdateCommand extends Command
 {
     protected $table = null;
-    protected $setList = array();
+    protected $setList = [];
     protected $where = null;
 
     public function table()
@@ -27,7 +27,7 @@ class UpdateCommand extends Command
 
             $arguments = $arguments[0];
         } else {
-            $arguments = array($arguments);
+            $arguments = [$arguments];
         }
 
         foreach ($arguments as $item) {
@@ -35,10 +35,10 @@ class UpdateCommand extends Command
                 throw new InvalidArgumentsException();
             }
 
-            $this->setList[] = array(
+            $this->setList[] = [
                 'column' => ColumnPart::create(array($item[0])),
                 'value' => ValuePart::create(array($item[1])),
-            );
+            ];
         }
 
         return $this;

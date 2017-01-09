@@ -6,7 +6,7 @@ use daisywheel\core\UnknownMethodException;
 
 class Builder
 {
-    protected static $supportedOperators = array(
+    protected static $supportedOperators = [
         ExpressionPart::OPERATOR_EQ => true,
         ExpressionPart::OPERATOR_NEQ => true,
         ExpressionPart::OPERATOR_GT => true,
@@ -24,9 +24,9 @@ class Builder
         ExpressionPart::OPERATOR_NEG => true,
         ExpressionPart::OPERATOR_NOT => true,
         ExpressionPart::OPERATOR_BETWEEN => true,
-    );
+    ];
 
-    protected static $supportedFunctions = array(
+    protected static $supportedFunctions = [
         FunctionPart::TYPE_AVG => true,
         FunctionPart::TYPE_COUNT => true,
         FunctionPart::TYPE_MAX => true,
@@ -43,7 +43,7 @@ class Builder
         FunctionPart::TYPE_SUBSTR => true,
         FunctionPart::TYPE_TRIM => true,
         FunctionPart::TYPE_UPPER => true,
-    );
+    ];
 
     protected $driver = null;
 

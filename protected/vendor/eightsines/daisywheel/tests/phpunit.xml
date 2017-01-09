@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+	bootstrap="./bootstrap.php"
+	backupGlobals="false"
+	backupStaticAttributes="false"
+	colors="true"
+	convertErrorsToExceptions="true"
+	convertNoticesToExceptions="true"
+	convertWarningsToExceptions="true"
+	processIsolation="false"
+	stopOnFailure="false"
+	syntaxCheck="false"
+>
+	<!-- http://www.phpunit.de/manual/current/en/appendixes.configuration.html -->
+	<testsuites>
+		<testsuite name="UnitTest">
+			<directory>./unit</directory>
+		</testsuite>
+	</testsuites>
+</phpunit>

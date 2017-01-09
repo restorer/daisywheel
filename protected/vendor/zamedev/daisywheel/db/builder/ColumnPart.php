@@ -27,7 +27,7 @@ class ColumnPart extends PartWithAlias
     const TYPE_MEDIUMBLOB = 'MEDIUMBLOB'; // 2^24
     const TYPE_LONGBLOB = 'LONGBLOB'; // 2^32
 
-    protected static $supportedTypes = array(
+    protected static $supportedTypes = [
         self::TYPE_PRIMARYKEY => true,
         self::TYPE_BIGPRIMARYKEY => true,
         self::TYPE_TYNYINT => true,
@@ -48,12 +48,12 @@ class ColumnPart extends PartWithAlias
         self::TYPE_BLOB => true,
         self::TYPE_MEDIUMBLOB => true,
         self::TYPE_LONGBLOB => true,
-    );
+    ];
 
     protected $table = null;
     protected $columnName = '';
     protected $columnType = null;
-    protected $columnOptions = array();
+    protected $columnOptions = [];
     protected $notNull = false;
     protected $default = null;
 
@@ -77,7 +77,7 @@ class ColumnPart extends PartWithAlias
 
     protected function magicDefault($value)
     {
-        $this->default = ValuePart::create(array($value));
+        $this->default = ValuePart::create([$value]);
         return $this;
     }
 

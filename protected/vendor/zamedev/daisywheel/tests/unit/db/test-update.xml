@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<test>
+    <builder><![CDATA[
+return $b->update()
+    ->table('Address')
+    ->set('name', 42)
+    ->set('name', $b->concat($b->c('id'), ' 2'))
+    ->set('name', $b->add($b->c('id'), 1))
+    ->set([
+        ['name', 42],
+        ['name', 24],
+    ])
+    ->where($b->eq($b->c('id'), 42))
+;
+    ]]></builder>
+    <result driver="mysql"><![CDATA[
+UPDATE `Address` SET `name` = '42', `name` = CONCAT(`id`, ' 2'), `name` = (`id` + '1'), `name` = '42', `name` = '24' WHERE (`id` = '42');
+    ]]></result>
+    <result driver="sqlite"><![CDATA[
+UPDATE "Address" SET "name" = '42', "name" = ("id" || ' 2'), "name" = ("id" + '1'), "name" = '42', "name" = '24' WHERE ("id" = '42');
+    ]]></result>
+    <result driver="pgsql"><![CDATA[
+UPDATE "Address" SET "name" = '42', "name" = ("id" || ' 2'), "name" = ("id" + '1'), "name" = '42', "name" = '24' WHERE ("id" = '42');
+    ]]></result>
+    <result driver="sqlsrv" version="2003"><![CDATA[
+UPDATE [Address] SET [name] = '42', [name] = CONCAT([id], ' 2'), [name] = ([id] + '1'), [name] = '42', [name] = '24' WHERE ([id] = '42');
+    ]]></result>
+    <result driver="sqlsrv" version="2005"><![CDATA[
+UPDATE [Address] SET [name] = '42', [name] = CONCAT([id], ' 2'), [name] = ([id] + '1'), [name] = '42', [name] = '24' WHERE ([id] = '42');
+    ]]></result>
+    <result driver="sqlsrv" version="2012"><![CDATA[
+UPDATE [Address] SET [name] = '42', [name] = CONCAT([id], ' 2'), [name] = ([id] + '1'), [name] = '42', [name] = '24' WHERE ([id] = '42');
+    ]]></result>
+</test>

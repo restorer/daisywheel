@@ -10,84 +10,84 @@ class PgSqlDriver extends BaseDriver
 {
     public function getColumnTypeMap()
     {
-        return array(
-            ColumnPart::TYPE_PRIMARYKEY => array(
+        return [
+            ColumnPart::TYPE_PRIMARYKEY => [
                 'type' => 'SERIAL NOT NULL PRIMARY KEY',
                 'supportNotNull' => false,
                 'supportDefault' => false,
-            ),
-            ColumnPart::TYPE_BIGPRIMARYKEY => array(
+            ],
+            ColumnPart::TYPE_BIGPRIMARYKEY => [
                 'type' => 'BIGSERIAL NOT NULL PRIMARY KEY',
                 'supportNotNull' => false,
                 'supportDefault' => false,
-            ),
-            ColumnPart::TYPE_TYNYINT => array(
+            ],
+            ColumnPart::TYPE_TYNYINT => [
                 'type' => 'SMALLINT',
-            ),
-            ColumnPart::TYPE_SMALLINT => array(
+            ],
+            ColumnPart::TYPE_SMALLINT => [
                 'type' => 'SMALLINT',
-            ),
-            ColumnPart::TYPE_INT => array(
+            ],
+            ColumnPart::TYPE_INT => [
                 'type' => 'INTEGER',
-            ),
-            ColumnPart::TYPE_BIGINT => array(
+            ],
+            ColumnPart::TYPE_BIGINT => [
                 'type' => 'BIGINT',
-            ),
-            ColumnPart::TYPE_DECIMAL => array(
+            ],
+            ColumnPart::TYPE_DECIMAL => [
                 'type' => 'DECIMAL',
-                'supportOptions' => array(0, 2),
-            ),
-            ColumnPart::TYPE_FLOAT => array(
+                'supportOptions' => [0, 2],
+            ],
+            ColumnPart::TYPE_FLOAT => [
                 'type' => 'REAL',
-            ),
-            ColumnPart::TYPE_DOUBLE => array(
+            ],
+            ColumnPart::TYPE_DOUBLE => [
                 'type' => 'DOUBLE PRECISION',
-            ),
-            ColumnPart::TYPE_DATE => array(
+            ],
+            ColumnPart::TYPE_DATE => [
                 'type' => 'DATE',
-            ),
-            ColumnPart::TYPE_TIME => array(
+            ],
+            ColumnPart::TYPE_TIME => [
                 'type' => 'TIME',
-            ),
-            ColumnPart::TYPE_DATETIME => array(
+            ],
+            ColumnPart::TYPE_DATETIME => [
                 'type' => 'TIMESTAMP',
-            ),
-            ColumnPart::TYPE_CHAR => array(
+            ],
+            ColumnPart::TYPE_CHAR => [
                 'type' => 'CHARACTER',
-                'supportOptions' => array(1, 1),
-            ),
-            ColumnPart::TYPE_VARCHAR => array(
+                'supportOptions' => [1, 1],
+            ],
+            ColumnPart::TYPE_VARCHAR => [
                 'type' => 'CHARACTER VARYING',
-                'supportOptions' => array(1, 1),
-            ),
-            ColumnPart::TYPE_TEXT => array(
+                'supportOptions' => [1, 1],
+            ],
+            ColumnPart::TYPE_TEXT => [
                 'type' => 'TEXT',
-            ),
-            ColumnPart::TYPE_MEDIUMTEXT => array(
+            ],
+            ColumnPart::TYPE_MEDIUMTEXT => [
                 'type' => 'TEXT',
-            ),
-            ColumnPart::TYPE_LONGTEXT => array(
+            ],
+            ColumnPart::TYPE_LONGTEXT => [
                 'type' => 'TEXT',
-            ),
-            ColumnPart::TYPE_BLOB => array(
+            ],
+            ColumnPart::TYPE_BLOB => [
                 'type' => 'BYTEA',
-            ),
-            ColumnPart::TYPE_MEDIUMBLOB => array(
+            ],
+            ColumnPart::TYPE_MEDIUMBLOB => [
                 'type' => 'BYTEA',
-            ),
-            ColumnPart::TYPE_LONGBLOB => array(
+            ],
+            ColumnPart::TYPE_LONGBLOB => [
                 'type' => 'BYTEA',
-            ),
-        );
+            ],
+        ];
     }
 
     public function getReferenceOptionMap()
     {
-        return array(
+        return [
             ForeignReference::OPTION_RESTRICT => 'RESTRICT',
             ForeignReference::OPTION_CASCADE => 'CASCADE',
             ForeignReference::OPTION_SET_NULL => 'SET NULL',
-        );
+        ];
     }
 
     public function connect($dsn, $username, $password, $driverOptions, $charset)

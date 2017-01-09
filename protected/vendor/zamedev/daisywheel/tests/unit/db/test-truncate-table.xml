@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<test>
+    <builder><![CDATA[
+return $b->truncateTable('Test');
+    ]]></builder>
+    <result driver="mysql"><![CDATA[
+TRUNCATE TABLE `Test`;
+    ]]></result>
+    <result driver="sqlite"><![CDATA[
+DELETE FROM "Test";
+DELETE FROM SQLITE_SEQUENCE WHERE name='Test';
+    ]]></result>
+    <result driver="pgsql"><![CDATA[
+TRUNCATE TABLE "Test" RESTART IDENTITY;
+    ]]></result>
+    <result driver="sqlsrv" version="2003"><![CDATA[
+TRUNCATE TABLE [Test];
+    ]]></result>
+    <result driver="sqlsrv" version="2005"><![CDATA[
+TRUNCATE TABLE [Test];
+    ]]></result>
+    <result driver="sqlsrv" version="2012"><![CDATA[
+TRUNCATE TABLE [Test];
+    ]]></result>
+</test>

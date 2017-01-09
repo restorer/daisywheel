@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<test>
+    <builder><![CDATA[
+return $b->select()
+    ->distinct()
+    ->columns(
+        $b->c('t', '*'),
+        $b->c('user', 'id')->as('userId'),
+        $b->concat(
+            $b->lower($b->c($b->temp('User'), 'firstName')),
+            ' ',
+            $b->upper($b->c('user', 'lastName'))
+        )->as('fullName'),
+        $b->select()->columns($b->c('id'))->from('SomeTable')->where($b->eq('uid', 42))->as('innerSelect'),
+        $b->not($b->gt(44, $b->neg(2)))->as('computedValue')
+    )
+    ->from('UserDriverData', 't')
+    ->from($b->temp('UserDriverDataAddition'), 'udda')
+    ->leftJoin('OrderQueue', 'orderQueue')
+    ->on(
+        $b->eq($b->c('orderQueue', 'orderId'), 42)
+        ->and($b->eq($b->c('orderQueue', 'driverUserId'), $b->c('t', 'userId')))
+        ->and($b->eq($b->c('orderQueue', 'dismissed'), 1))
+    )
+    ->innerJoin($b->temp('User'), 'user')
+    ->on($b->eq($b->c('user', 'id'), $b->c('t', 'userId')))
+    ->where(
+        $b->eq($b->c('t', 'status'), 'active')
+        ->and($b->not($b->eq($b->c('user', 'isDeleted'), 0)))
+        ->and(
+            $b->eq($b->c('orderQueue', 'id'), null)
+            ->or($b->neq($b->c('orderQueue', 'uid'), null))
+        )
+        ->and($b->notIn($b->c('t', 'id'), []))
+    )
+    ->groupBy($b->c('user', 'id'))
+    ->groupBy($b->c('user', 'fullName'))
+    ->having($b->in($b->c('t', 'id'), [41, 42, 43]))
+    ->orderBy($b->c('fullName'), false)
+    ->orderBy($b->c('id'))
+    ->offset(100)
+    ->limit(10)
+    ->union(
+        $b->select()->from('Address')
+    )
+    ->unionAll(
+        $b->select()->from($b->temp('House'))
+    )
+;
+    ]]></builder>
+    <result driver="mysql"><![CDATA[
+SELECT DISTINCT `t`.*, `user`.`id` AS `userId`, CONCAT(LOWER(`User`.`firstName`), ' ', UPPER(`user`.`lastName`)) AS `fullName`, (SELECT `id` FROM `SomeTable` WHERE ('uid' = '42')), (NOT ('44' > (- '2'))) AS `computedValue` FROM `UserDriverData` AS `t`, `UserDriverDataAddition` AS `udda` LEFT JOIN `OrderQueue` AS `orderQueue` ON ((`orderQueue`.`orderId` = '42') AND (`orderQueue`.`driverUserId` = `t`.`userId`) AND (`orderQueue`.`dismissed` = '1')) INNER JOIN `User` AS `user` ON (`user`.`id` = `t`.`userId`) WHERE ((`t`.`status` = 'active') AND (NOT (`user`.`isDeleted` = '0')) AND ((`orderQueue`.`id` IS NULL) OR (`orderQueue`.`uid` IS NOT NULL)) AND (1 = 1)) GROUP BY `user`.`id`, `user`.`fullName` HAVING (`t`.`id` IN ('41', '42', '43')) ORDER BY `fullName` DESC, `id` ASC LIMIT '100', '10' UNION SELECT * FROM `Address` UNION ALL SELECT * FROM `House`;
+    ]]></result>
+    <result driver="sqlite"><![CDATA[
+SELECT DISTINCT "t".*, "user"."id" AS "userId", (LOWER("User"."firstName") || ' ' || UPPER("user"."lastName")) AS "fullName", (SELECT "id" FROM "SomeTable" WHERE ('uid' = '42')), (NOT ('44' > (- '2'))) AS "computedValue" FROM "UserDriverData" AS "t", "UserDriverDataAddition" AS "udda" LEFT JOIN "OrderQueue" AS "orderQueue" ON (("orderQueue"."orderId" = '42') AND ("orderQueue"."driverUserId" = "t"."userId") AND ("orderQueue"."dismissed" = '1')) INNER JOIN "User" AS "user" ON ("user"."id" = "t"."userId") WHERE (("t"."status" = 'active') AND (NOT ("user"."isDeleted" = '0')) AND (("orderQueue"."id" IS NULL) OR ("orderQueue"."uid" IS NOT NULL)) AND (1 = 1)) GROUP BY "user"."id", "user"."fullName" HAVING ("t"."id" IN ('41', '42', '43')) ORDER BY "fullName" DESC, "id" ASC LIMIT '100', '10' UNION SELECT * FROM "Address" UNION ALL SELECT * FROM "House";
+    ]]></result>
+    <result driver="pgsql"><![CDATA[
+SELECT DISTINCT "t".*, "user"."id" AS "userId", (LOWER("User"."firstName") || ' ' || UPPER("user"."lastName")) AS "fullName", (SELECT "id" FROM "SomeTable" WHERE ('uid' = '42')), (NOT ('44' > (- '2'))) AS "computedValue" FROM "UserDriverData" AS "t", "UserDriverDataAddition" AS "udda" LEFT JOIN "OrderQueue" AS "orderQueue" ON (("orderQueue"."orderId" = '42') AND ("orderQueue"."driverUserId" = "t"."userId") AND ("orderQueue"."dismissed" = '1')) INNER JOIN "User" AS "user" ON ("user"."id" = "t"."userId") WHERE (("t"."status" = 'active') AND (NOT ("user"."isDeleted" = '0')) AND (("orderQueue"."id" IS NULL) OR ("orderQueue"."uid" IS NOT NULL)) AND (1 = 1)) GROUP BY "user"."id", "user"."fullName" HAVING ("t"."id" IN ('41', '42', '43')) ORDER BY "fullName" DESC, "id" ASC LIMIT '10' OFFSET '100' UNION SELECT * FROM "Address" UNION ALL SELECT * FROM "House";
+    ]]></result>
+    <result driver="sqlsrv" version="2003"><![CDATA[
+SELECT * FROM (SELECT TOP '10' * FROM (SELECT DISTINCT TOP '110' [t].*, [user].[id] AS [userId], CONCAT(LOWER([#User].[firstName]), ' ', UPPER([user].[lastName])) AS [fullName], (SELECT [id] FROM [SomeTable] WHERE ('uid' = '42')), (NOT ('44' > (- '2'))) AS [computedValue] FROM [UserDriverData] AS [t], [#UserDriverDataAddition] AS [udda] LEFT JOIN [OrderQueue] AS [orderQueue] ON (([orderQueue].[orderId] = '42') AND ([orderQueue].[driverUserId] = [t].[userId]) AND ([orderQueue].[dismissed] = '1')) INNER JOIN [#User] AS [user] ON ([user].[id] = [t].[userId]) WHERE (([t].[status] = 'active') AND (NOT ([user].[isDeleted] = '0')) AND (([orderQueue].[id] IS NULL) OR ([orderQueue].[uid] IS NOT NULL)) AND (1 = 1)) GROUP BY [user].[id], [user].[fullName] HAVING ([t].[id] IN ('41', '42', '43')) ORDER BY [fullName] DESC, [id] ASC) ORDER BY [fullName] ASC, [id] DESC) ORDER BY [fullName] DESC, [id] ASC UNION SELECT * FROM [Address] UNION ALL SELECT * FROM [#House];
+    ]]></result>
+    <result driver="sqlsrv" version="2005"><![CDATA[
+SELECT * FROM (SELECT DISTINCT ROW_NUMBER() OVER (ORDER BY [fullName] DESC, [id] ASC) AS rownumber_1, [t].*, [user].[id] AS [userId], CONCAT(LOWER([#User].[firstName]), ' ', UPPER([user].[lastName])) AS [fullName], (SELECT [id] FROM [SomeTable] WHERE ('uid' = '42')), (NOT ('44' > (- '2'))) AS [computedValue] FROM [UserDriverData] AS [t], [#UserDriverDataAddition] AS [udda] LEFT JOIN [OrderQueue] AS [orderQueue] ON (([orderQueue].[orderId] = '42') AND ([orderQueue].[driverUserId] = [t].[userId]) AND ([orderQueue].[dismissed] = '1')) INNER JOIN [#User] AS [user] ON ([user].[id] = [t].[userId]) WHERE (([t].[status] = 'active') AND (NOT ([user].[isDeleted] = '0')) AND (([orderQueue].[id] IS NULL) OR ([orderQueue].[uid] IS NOT NULL)) AND (1 = 1)) GROUP BY [user].[id], [user].[fullName] HAVING ([t].[id] IN ('41', '42', '43'))) WHERE rownumber_1 BETWEEN '101' AND '110' UNION SELECT * FROM [Address] UNION ALL SELECT * FROM [#House];
+    ]]></result>
+    <result driver="sqlsrv" version="2012"><![CDATA[
+SELECT DISTINCT [t].*, [user].[id] AS [userId], CONCAT(LOWER([#User].[firstName]), ' ', UPPER([user].[lastName])) AS [fullName], (SELECT [id] FROM [SomeTable] WHERE ('uid' = '42')), (NOT ('44' > (- '2'))) AS [computedValue] FROM [UserDriverData] AS [t], [#UserDriverDataAddition] AS [udda] LEFT JOIN [OrderQueue] AS [orderQueue] ON (([orderQueue].[orderId] = '42') AND ([orderQueue].[driverUserId] = [t].[userId]) AND ([orderQueue].[dismissed] = '1')) INNER JOIN [#User] AS [user] ON ([user].[id] = [t].[userId]) WHERE (([t].[status] = 'active') AND (NOT ([user].[isDeleted] = '0')) AND (([orderQueue].[id] IS NULL) OR ([orderQueue].[uid] IS NOT NULL)) AND (1 = 1)) GROUP BY [user].[id], [user].[fullName] HAVING ([t].[id] IN ('41', '42', '43')) ORDER BY [fullName] DESC, [id] ASC OFFSET '100' FETCH NEXT '10' ROWS ONLY UNION SELECT * FROM [Address] UNION ALL SELECT * FROM [#House];
+    ]]></result>
+</test>

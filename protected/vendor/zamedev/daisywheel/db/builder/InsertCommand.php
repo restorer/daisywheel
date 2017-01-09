@@ -7,8 +7,8 @@ use daisywheel\core\InvalidArgumentsException;
 class InsertCommand extends Command
 {
     protected $into = null;
-    protected $columns = array();
-    protected $values = array();
+    protected $columns = [];
+    protected $values = [];
     protected $select = null;
 
     public function into()
@@ -30,7 +30,7 @@ class InsertCommand extends Command
         }
 
         $this->columns = array_map(function($v) {
-            return ColumnPart::create(array($v));
+            return ColumnPart::create([$v]);
         }, $arguments);
 
         return $this;
@@ -47,7 +47,7 @@ class InsertCommand extends Command
 
             $arguments = $arguments[0];
         } else {
-            $arguments = array($arguments);
+            $arguments = [$arguments];
         }
 
         foreach ($arguments as $list) {
@@ -56,7 +56,7 @@ class InsertCommand extends Command
             }
 
             $this->values[] = array_map(function($v) {
-                return ValuePart::create(array($v));
+                return ValuePart::create([$v]);
             }, $list);
         }
 

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<test>
+    <builder><![CDATA[
+return $b->insert()
+    ->into('Address')
+    ->columns('id', 'name')
+    ->values(1, 'Test 1')
+    ->values(2, $b->concat($b->c('id'), ' 2'))
+    ->values([
+        [3, 'Test 3'],
+        [4, 'Test 4'],
+    ])
+    ->select()
+    ->columns('id', 'name')
+    ->from('House')
+;
+    ]]></builder>
+    <result driver="mysql"><![CDATA[
+INSERT INTO `Address` (`id`, `name`) VALUES ('1', 'Test 1'), ('2', CONCAT(`id`, ' 2')), ('3', 'Test 3'), ('4', 'Test 4') SELECT 'id', 'name' FROM `House`;
+    ]]></result>
+    <result driver="sqlite"><![CDATA[
+INSERT INTO "Address" ("id", "name") VALUES ('1', 'Test 1'), ('2', ("id" || ' 2')), ('3', 'Test 3'), ('4', 'Test 4') SELECT 'id', 'name' FROM "House";
+    ]]></result>
+    <result driver="pgsql"><![CDATA[
+INSERT INTO "Address" ("id", "name") VALUES ('1', 'Test 1'), ('2', ("id" || ' 2')), ('3', 'Test 3'), ('4', 'Test 4') SELECT 'id', 'name' FROM "House";
+    ]]></result>
+    <result driver="sqlsrv" version="2003"><![CDATA[
+INSERT INTO [Address] ([id], [name]) VALUES ('1', 'Test 1'), ('2', CONCAT([id], ' 2')), ('3', 'Test 3'), ('4', 'Test 4') SELECT 'id', 'name' FROM [House];
+    ]]></result>
+    <result driver="sqlsrv" version="2005"><![CDATA[
+INSERT INTO [Address] ([id], [name]) VALUES ('1', 'Test 1'), ('2', CONCAT([id], ' 2')), ('3', 'Test 3'), ('4', 'Test 4') SELECT 'id', 'name' FROM [House];
+    ]]></result>
+    <result driver="sqlsrv" version="2012"><![CDATA[
+INSERT INTO [Address] ([id], [name]) VALUES ('1', 'Test 1'), ('2', CONCAT([id], ' 2')), ('3', 'Test 3'), ('4', 'Test 4') SELECT 'id', 'name' FROM [House];
+    ]]></result>
+</test>

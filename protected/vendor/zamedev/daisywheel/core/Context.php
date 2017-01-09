@@ -4,15 +4,21 @@ namespace daisywheel\core;
 
 // Currently, context implements service locator pattern.
 // While it may be considered as anti-pattern, we think that it simplifies rapid development.
+
+/**
+ * @property daisywheel\core\Config $config
+ * @property daisywheel\core\BaseBootstrapper $bootstrapper
+ * @property daisywheel\core\Component\Response $response
+ */
 class Context
 {
     const CHARSET = 'UTF-8';
 
-    protected static $componentMap = array(
+    protected static $componentMap = [
         'db' => 'daisywheel\\db\\Connection',
-    );
+    ];
 
-    protected $components = array();
+    protected $components = [];
 
     public function __construct($config)
     {
@@ -50,6 +56,11 @@ class Context
         }
     }
 
+    public function __isset($name)
+    {
+        return (array_key_exists($name, $this->components) || $this->config->get("components/{$name}"));
+    }
+
     protected function requireComponent($name)
     {
         $info = $this->config->get("components/{$name}");
@@ -58,7 +69,6 @@ class Context
             throw new ComponentNotDefinedException("Component \"$name\" not defined");
         }
 
-        $result = null;
         $componentConfig = $this->config->slice("components/{$name}");
 
         if (is_string($info)) {
@@ -78,6 +88,7 @@ class Context
                 throw new ComponentNotDefinedException("Class not defined for component \"$name\"");
             }
 
+            // TODO: https://bugs.php.net/bug.php?id=53727, consider rewrite using ReflectionClass::implementsInterface
             if (!is_subclass_of($class, 'daisywheel\\core\\Component')) {
                 throw new ComponentNotDefinedException("Class \"$class\" for component \"$name\" must extend daisywheel\\core\\Component");
             }

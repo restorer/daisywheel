@@ -32,7 +32,7 @@ class FunctionPart extends PartWithAlias
             $this->type = mb_strtoupper($type);
 
             $this->arguments = array_map(function($v) {
-                return ValuePart::create(array($v));
+                return ValuePart::create([$v]);
             }, $arguments);
         } else {
             throw new InvalidArgumentsException();

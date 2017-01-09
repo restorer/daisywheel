@@ -63,8 +63,8 @@ class Response extends Component
 
     const HEADER_CONTENT_TYPE = 'Content-type';
 
-    protected $headers = array();
-    protected $cookies = array();
+    protected $headers = [];
+    protected $cookies = [];
 
     public function init($config)
     {
@@ -120,26 +120,26 @@ class Response extends Component
 
     public function setCookie($key, $value, $expire=0, $path='/', $domain='', $secure=false, $httpOnly=false)
     {
-        $this->cookies[$key] = array(
+        $this->cookies[$key] = [
             'value' => $value,
             'expire' => $expire,
             'path' => $path,
             'domain' => $domain,
             'secure' => $secure,
             'httpOnly' => $httpOnly,
-        );
+        ];
     }
 
     public function deleteCookie($key, $path='/', $domain='', $secure=false)
     {
-        $this->cookies[$key] = array(
+        $this->cookies[$key] = [
             'value' => '',
             'expire' => time() - 3600,
             'path' => $path,
             'domain' => $domain,
             'secure' => $secure,
             'httpOnly' => false,
-        );
+        ];
     }
 
     public function flush()

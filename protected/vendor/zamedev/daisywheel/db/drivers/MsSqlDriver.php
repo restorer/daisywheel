@@ -13,84 +13,84 @@ class MsSqlDriver extends BaseDriver
 
     public function getColumnTypeMap()
     {
-        return array(
-            ColumnPart::TYPE_PRIMARYKEY => array(
+        return [
+            ColumnPart::TYPE_PRIMARYKEY => [
                 'type' => 'INT NOT NULL IDENTITY(1, 1) PRIMARY KEY',
                 'supportNotNull' => false,
                 'supportDefault' => false,
-            ),
-            ColumnPart::TYPE_BIGPRIMARYKEY => array(
+            ],
+            ColumnPart::TYPE_BIGPRIMARYKEY => [
                 'type' => 'BIGINT NOT NULL IDENTITY(1, 1) PRIMARY KEY',
                 'supportNotNull' => false,
                 'supportDefault' => false,
-            ),
-            ColumnPart::TYPE_TYNYINT => array(
+            ],
+            ColumnPart::TYPE_TYNYINT => [
                 'type' => 'TINYINT',
-            ),
-            ColumnPart::TYPE_SMALLINT => array(
+            ],
+            ColumnPart::TYPE_SMALLINT => [
                 'type' => 'SMALLINT',
-            ),
-            ColumnPart::TYPE_INT => array(
+            ],
+            ColumnPart::TYPE_INT => [
                 'type' => 'INT',
-            ),
-            ColumnPart::TYPE_BIGINT => array(
+            ],
+            ColumnPart::TYPE_BIGINT => [
                 'type' => 'BIGINT',
-            ),
-            ColumnPart::TYPE_DECIMAL => array(
+            ],
+            ColumnPart::TYPE_DECIMAL => [
                 'type' => 'DECIMAL',
-                'supportOptions' => array(0, 2),
-            ),
-            ColumnPart::TYPE_FLOAT => array(
+                'supportOptions' => [0, 2],
+            ],
+            ColumnPart::TYPE_FLOAT => [
                 'type' => 'FLOAT(24)',
-            ),
-            ColumnPart::TYPE_DOUBLE => array(
+            ],
+            ColumnPart::TYPE_DOUBLE => [
                 'type' => 'FLOAT(53)',
-            ),
-            ColumnPart::TYPE_DATE => array(
+            ],
+            ColumnPart::TYPE_DATE => [
                 'type' => 'DATE',
-            ),
-            ColumnPart::TYPE_TIME => array(
+            ],
+            ColumnPart::TYPE_TIME => [
                 'type' => 'TIME',
-            ),
-            ColumnPart::TYPE_DATETIME => array(
+            ],
+            ColumnPart::TYPE_DATETIME => [
                 'type' => 'DATETIME',
-            ),
-            ColumnPart::TYPE_CHAR => array(
+            ],
+            ColumnPart::TYPE_CHAR => [
                 'type' => 'NCHAR',
-                'supportOptions' => array(1, 1),
-            ),
-            ColumnPart::TYPE_VARCHAR => array(
+                'supportOptions' => [1, 1],
+            ],
+            ColumnPart::TYPE_VARCHAR => [
                 'type' => 'NVARCHAR',
-                'supportOptions' => array(1, 1),
-            ),
-            ColumnPart::TYPE_TEXT => array(
+                'supportOptions' => [1, 1],
+            ],
+            ColumnPart::TYPE_TEXT => [
                 'type' => 'NVARCHAR(MAX)',
-            ),
-            ColumnPart::TYPE_MEDIUMTEXT => array(
+            ],
+            ColumnPart::TYPE_MEDIUMTEXT => [
                 'type' => 'NVARCHAR(MAX)',
-            ),
-            ColumnPart::TYPE_LONGTEXT => array(
+            ],
+            ColumnPart::TYPE_LONGTEXT => [
                 'type' => 'NVARCHAR(MAX)',
-            ),
-            ColumnPart::TYPE_BLOB => array(
+            ],
+            ColumnPart::TYPE_BLOB => [
                 'type' => 'VARBINARY(MAX)',
-            ),
-            ColumnPart::TYPE_MEDIUMBLOB => array(
+            ],
+            ColumnPart::TYPE_MEDIUMBLOB => [
                 'type' => 'VARBINARY(MAX)',
-            ),
-            ColumnPart::TYPE_LONGBLOB => array(
+            ],
+            ColumnPart::TYPE_LONGBLOB => [
                 'type' => 'VARBINARY(MAX)',
-            ),
-        );
+            ],
+        ];
     }
 
     public function getReferenceOptionMap()
     {
-        return array(
+        return [
             ForeignReference::OPTION_RESTRICT => 'NO ACTION',
             ForeignReference::OPTION_CASCADE => 'CASCADE',
             ForeignReference::OPTION_SET_NULL => 'SET NULL',
-        );
+        ];
     }
 
     public function connect($dsn, $username, $password, $driverOptions, $charset)
@@ -131,7 +131,7 @@ class MsSqlDriver extends BaseDriver
         }
 
         if ($part->type === FunctionPart::TYPE_TRIM) {
-            return 'LTRIM(RTRIM((' . BuildHelper::buildPartList($this, $part->arguments) . '))';
+            return 'LTRIM(RTRIM(' . BuildHelper::buildPartList($this, $part->arguments) . '))';
         }
 
         return parent::buildFunctionPart($part);
@@ -156,9 +156,9 @@ class MsSqlDriver extends BaseDriver
         }
 
         if ($this->sqlServerVersion >= 2005) {
-            $column = 'rownumber_' . uniqid();
+            $column = 'rownumber_' . ($this->isMock ? 1 : uniqid());
 
-            return "SELECT * FROM ({$start} ROW_NUMBER() OVER ({$order}) AS {$column}, {$parts}) WHERE {$column} BETWEEN "
+            return "SELECT * FROM ({$start} ROW_NUMBER() OVER (" . trim($order) . ") AS {$column},{$parts}) WHERE {$column} BETWEEN "
                 . $this->quote($command->offset + 1)
                 . ' AND '
                 . $this->quote($command->offset + $command->limit);

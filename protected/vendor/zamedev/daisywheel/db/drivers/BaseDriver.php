@@ -8,6 +8,7 @@ abstract class BaseDriver
 {
     protected $connection = null;
     protected $dbh = null;
+    protected $isMock = false;
 
     public function __construct($connection)
     {
@@ -16,11 +17,19 @@ abstract class BaseDriver
 
     public function connect($dsn, $username, $password, $driverOptions, $charset)
     {
-        $this->dbh = new \PDO($dsn, $username, $password, $driverOptions);
+        if (preg_match('/^[a-zA-Z]+:mock=([a-zA-Z0-9_\\\\]+)/', $dsn, $mt)) {
+            $className = $mt[1];
+            $this->isMock = true;
+        } else {
+            $className = '\\PDO';
+        }
+
+        $this->dbh = new $className($dsn, $username, $password, $driverOptions);
     }
 
     public function quote($value)
     {
+        // TODO: quote(print_r($value, true)) - ?
         return $this->dbh->quote($value);
     }
 
@@ -29,7 +38,7 @@ abstract class BaseDriver
         return $this->quoteIdentifier($this->connection->prefix . $name, $temporary);
     }
 
-    public function queryAll($sql, $params=array())
+    public function queryAll($sql, $params=[])
     {
         $sth = $this->dbh->prepare($sql);
         $sth->execute($params);
@@ -39,7 +48,7 @@ abstract class BaseDriver
         return $result;
     }
 
-    public function queryRow($sql, $params=array())
+    public function queryRow($sql, $params=[])
     {
         $sth = $this->dbh->prepare($sql);
         $sth->execute($params);
@@ -49,7 +58,7 @@ abstract class BaseDriver
         return $result;
     }
 
-    public function queryColumn($sql, $params=array())
+    public function queryColumn($sql, $params=[])
     {
         $sth = $this->dbh->prepare($sql);
         $sth->execute($params);
@@ -59,14 +68,14 @@ abstract class BaseDriver
         return $result;
     }
 
-    public function execute($sql, $params=array())
+    public function execute($sql, $params=[])
     {
         $sth = $this->dbh->prepare($sql);
         $sth->execute($params);
         return $sth->rowCount();
     }
 
-    public function insert($sql, $params=array())
+    public function insert($sql, $params=[])
     {
         $sth = $this->dbh->prepare($sql);
         $sth->execute($params);

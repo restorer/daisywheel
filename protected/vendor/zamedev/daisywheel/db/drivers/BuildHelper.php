@@ -56,6 +56,17 @@ class BuildHelper
         }, $list));
     }
 
+    public static function buildSelectOrder($driver, $command, $reverse=false)
+    {
+        if (!count($command->orderByList)) {
+            return '';
+        }
+
+        return ' ORDER BY ' . join(', ', array_map(function($v) use ($driver, $reverse) {
+            return self::buildColumnPart($driver, $v['column']) . ' ' . (($reverse ? !$v['asc'] : $v['asc']) ? 'ASC' : 'DESC');
+        }, $command->orderByList));
+    }
+
     protected static function buildTruncateTableCommand($driver, $command)
     {
         return $driver->buildTruncateTableCommand($command);
@@ -81,7 +92,7 @@ class BuildHelper
 
     protected static function buildCreateTableCommand($driver, $command)
     {
-        $list = self::buildCreateTableColumns($driver, $command, array());
+        $list = self::buildCreateTableColumns($driver, $command, []);
         $list = self::buildCreateTableConstraints($driver, $command, $list);
 
         $sql = 'CREATE '
@@ -89,7 +100,7 @@ class BuildHelper
             . ' (' . join(', ', $list) . ')'
             . $driver->buildCreateTableEndPart($command);
 
-        $list = self::buildCreateTableIndices($driver, $command, array($sql));
+        $list = self::buildCreateTableIndices($driver, $command, [$sql]);
         return (count($list) == 1 ? $list[0] : $list);
     }
 
@@ -283,17 +294,6 @@ class BuildHelper
         }
 
         return $result;
-    }
-
-    protected static function buildSelectOrder($driver, $command, $reverse=false)
-    {
-        if (!count($command->orderByList)) {
-            return '';
-        }
-
-        return ' ORDER BY ' . join(', ', array_map(function($v) use ($driver, $reverse) {
-            return self::buildColumnPart($driver, $v['column']) . ' ' . (($reverse ? !$v['asc'] : $v['asc']) ? 'ASC' : 'DESC');
-        }, $command->orderByList)) . ' ';
     }
 
     protected static function buildGroupByList($driver, $list, $prepend)

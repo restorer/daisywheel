@@ -13,91 +13,91 @@ class SqliteDriver extends BaseDriver
 {
     public function getColumnTypeMap()
     {
-        return array(
-            ColumnPart::TYPE_PRIMARYKEY => array(
+        return [
+            ColumnPart::TYPE_PRIMARYKEY => [
                 'type' => 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
                 'supportNotNull' => false,
                 'supportDefault' => false,
-            ),
-            ColumnPart::TYPE_BIGPRIMARYKEY => array(
+            ],
+            ColumnPart::TYPE_BIGPRIMARYKEY => [
                 'type' => 'INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT',
                 'supportNotNull' => false,
                 'supportDefault' => false,
-            ),
-            ColumnPart::TYPE_TYNYINT => array(
+            ],
+            ColumnPart::TYPE_TYNYINT => [
                 'type' => 'INTEGER',
-            ),
-            ColumnPart::TYPE_SMALLINT => array(
+            ],
+            ColumnPart::TYPE_SMALLINT => [
                 'type' => 'INTEGER',
-            ),
-            ColumnPart::TYPE_INT => array(
+            ],
+            ColumnPart::TYPE_INT => [
                 'type' => 'INTEGER',
-            ),
-            ColumnPart::TYPE_BIGINT => array(
+            ],
+            ColumnPart::TYPE_BIGINT => [
                 'type' => 'INTEGER',
-            ),
-            ColumnPart::TYPE_DECIMAL => array(
+            ],
+            ColumnPart::TYPE_DECIMAL => [
                 'type' => 'NUMERIC',
-                'supportOptions' => array(0, 2),
-            ),
-            ColumnPart::TYPE_FLOAT => array(
+                'supportOptions' => [0, 2],
+            ],
+            ColumnPart::TYPE_FLOAT => [
                 'type' => 'REAL',
-            ),
-            ColumnPart::TYPE_DOUBLE => array(
+            ],
+            ColumnPart::TYPE_DOUBLE => [
                 'type' => 'REAL',
-            ),
-            ColumnPart::TYPE_DATE => array(
+            ],
+            ColumnPart::TYPE_DATE => [
                 'type' => 'NUMERIC', // according to http://www.sqlite.org/datatype3.html
-            ),
-            ColumnPart::TYPE_TIME => array(
+            ],
+            ColumnPart::TYPE_TIME => [
                 'type' => 'NUMERIC', // according to http://www.sqlite.org/datatype3.html
-            ),
-            ColumnPart::TYPE_DATETIME => array(
+            ],
+            ColumnPart::TYPE_DATETIME => [
                 'type' => 'NUMERIC', // according to http://www.sqlite.org/datatype3.html
-            ),
-            ColumnPart::TYPE_CHAR => array(
+            ],
+            ColumnPart::TYPE_CHAR => [
                 'type' => 'TEXT',
-                'supportOptions' => array(1, 1),
-            ),
-            ColumnPart::TYPE_VARCHAR => array(
+                'supportOptions' => [1, 1],
+            ],
+            ColumnPart::TYPE_VARCHAR => [
                 'type' => 'TEXT',
-                'supportOptions' => array(1, 1),
-            ),
-            ColumnPart::TYPE_TEXT => array(
+                'supportOptions' => [1, 1],
+            ],
+            ColumnPart::TYPE_TEXT => [
                 'type' => 'TEXT',
-            ),
-            ColumnPart::TYPE_MEDIUMTEXT => array(
+            ],
+            ColumnPart::TYPE_MEDIUMTEXT => [
                 'type' => 'TEXT',
-            ),
-            ColumnPart::TYPE_LONGTEXT => array(
+            ],
+            ColumnPart::TYPE_LONGTEXT => [
                 'type' => 'TEXT',
-            ),
-            ColumnPart::TYPE_BLOB => array(
+            ],
+            ColumnPart::TYPE_BLOB => [
                 'type' => 'BLOB',
-            ),
-            ColumnPart::TYPE_MEDIUMBLOB => array(
+            ],
+            ColumnPart::TYPE_MEDIUMBLOB => [
                 'type' => 'BLOB',
-            ),
-            ColumnPart::TYPE_LONGBLOB => array(
+            ],
+            ColumnPart::TYPE_LONGBLOB => [
                 'type' => 'BLOB',
-            ),
-        );
+            ],
+        ];
     }
 
     public function getReferenceOptionMap()
     {
-        return array(
+        return [
             ForeignReference::OPTION_RESTRICT => 'RESTRICT',
             ForeignReference::OPTION_CASCADE => 'CASCADE',
             ForeignReference::OPTION_SET_NULL => 'SET NULL',
-        );
+        ];
     }
 
     public function connect($dsn, $username, $password, $driverOptions, $charset)
     {
         parent::connect($dsn, $username, $password, $driverOptions, $charset);
         $this->dbh->exec('PRAGMA foreign_keys=ON');
-        // PRAGMA encoding="UTF-8"
+        // PRAGMA encoding='UTF-8'
     }
 
     public function quoteIdentifier($name, $temporary=false)
@@ -144,9 +144,9 @@ class SqliteDriver extends BaseDriver
 
     public function buildTruncateTableCommand($command)
     {
-        return array(
+        return [
             'DELETE FROM ' . $this->quoteTable($command->table->name),
             'DELETE FROM SQLITE_SEQUENCE WHERE name=' . $this->quote($command->table->name),
-        );
+        ];
     }
 }

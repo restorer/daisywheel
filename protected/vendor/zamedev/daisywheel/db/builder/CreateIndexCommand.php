@@ -8,7 +8,7 @@ class CreateIndexCommand extends Command
 {
     protected $indexName = '';
     protected $table = null;
-    protected $columnNames = array();
+    protected $columnNames = [];
 
     public function __construct($driver, $indexName)
     {

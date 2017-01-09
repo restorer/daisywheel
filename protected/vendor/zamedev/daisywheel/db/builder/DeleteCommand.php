@@ -4,7 +4,7 @@ namespace daisywheel\db\builder;
 
 class DeleteCommand extends Command
 {
-    protected $from = '';
+    protected $from = null;
     protected $where = null;
 
     public function from()

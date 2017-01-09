@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<test>
+    <!--
+        http://dev.mysql.com/doc/refman/5.1/en/create-table.html
+        http://sqlite.org/lang_createtable.html
+        http://www.postgresql.org/docs/8.1/static/sql-createtable.html
+        http://technet.microsoft.com/en-us/library/ms174979.aspx
+    -->
+    <builder><![CDATA[
+return $b->createTable($b->temp('Test'))
+    ->columns(
+        $b->c('id')->primaryKey(), // bigPrimaryKey()
+        $b->c('key')->varChar(255)->notNull(),
+        $b->c('name')->varChar(255)->default('TestDefault'),
+        $b->c('fooId')->int()
+    )
+    ->unique('idxKey', 'key')
+    ->unique('idxKeyFooId', 'key', 'fooId')
+    ->unique('idxKeyFooId2', ['key', 'fooId'])
+    ->index('idxName', 'name')
+    ->index('idxKeyName', ['key', 'name'])
+    ->index('idxKeyName2', 'key', 'name')
+    ->foreignKey('fkFooTest', 'fooId')->references('Foo', 'id')->onDeleteSetNull()->onUpdateCascade()
+    ->foreignKey('fkFooTest2', ['key', 'fooId'])->references('Foo', ['uid', 'id'])
+    ->foreignKey('fkFooTest3', 'key', 'fooId')->references('Foo', 'uid', 'id')
+;
+    ]]></builder>
+    <result driver="mysql"><![CDATA[
+CREATE TEMPORARY TABLE `Test` (`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY, `key` VARCHAR('255') NOT NULL, `name` VARCHAR('255') DEFAULT 'TestDefault', `fooId` INT, CONSTRAINT `idxKey` UNIQUE (`key`), CONSTRAINT `idxKeyFooId` UNIQUE (`key`, `fooId`), CONSTRAINT `idxKeyFooId2` UNIQUE (`key`, `fooId`), CONSTRAINT `fkFooTest` FOREIGN KEY (`fooId`) REFERENCES `Foo` (`id`) ON UPDATE CASCADE ON DELETE SET NULL, CONSTRAINT `fkFooTest2` FOREIGN KEY (`key`, `fooId`) REFERENCES `Foo` (`uid`, `id`) ON UPDATE RESTRICT ON DELETE RESTRICT, CONSTRAINT `fkFooTest3` FOREIGN KEY (`key`, `fooId`) REFERENCES `Foo` (`uid`, `id`) ON UPDATE RESTRICT ON DELETE RESTRICT) ENGINE=InnoDB;
+CREATE INDEX `idxName` ON `Test` (`name`);
+CREATE INDEX `idxKeyName` ON `Test` (`key`, `name`);
+CREATE INDEX `idxKeyName2` ON `Test` (`key`, `name`);
+    ]]></result>
+    <result driver="sqlite"><![CDATA[
+CREATE TEMPORARY TABLE "Test" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "key" TEXT('255') NOT NULL, "name" TEXT('255') DEFAULT 'TestDefault', "fooId" INTEGER, CONSTRAINT "Test_idxKey" UNIQUE ("key"), CONSTRAINT "Test_idxKeyFooId" UNIQUE ("key", "fooId"), CONSTRAINT "Test_idxKeyFooId2" UNIQUE ("key", "fooId"), CONSTRAINT "Test_fkFooTest" FOREIGN KEY ("fooId") REFERENCES "Foo" ("id") ON UPDATE CASCADE ON DELETE SET NULL, CONSTRAINT "Test_fkFooTest2" FOREIGN KEY ("key", "fooId") REFERENCES "Foo" ("uid", "id") ON UPDATE RESTRICT ON DELETE RESTRICT, CONSTRAINT "Test_fkFooTest3" FOREIGN KEY ("key", "fooId") REFERENCES "Foo" ("uid", "id") ON UPDATE RESTRICT ON DELETE RESTRICT);
+CREATE INDEX "Test_idxName" ON "Test" ("name");
+CREATE INDEX "Test_idxKeyName" ON "Test" ("key", "name");
+CREATE INDEX "Test_idxKeyName2" ON "Test" ("key", "name");
+    ]]></result>
+    <result driver="pgsql"><![CDATA[
+CREATE TEMPORARY TABLE "Test" ("id" SERIAL NOT NULL PRIMARY KEY, "key" CHARACTER VARYING('255') NOT NULL, "name" CHARACTER VARYING('255') DEFAULT 'TestDefault', "fooId" INTEGER, CONSTRAINT "Test_idxKey" UNIQUE ("key"), CONSTRAINT "Test_idxKeyFooId" UNIQUE ("key", "fooId"), CONSTRAINT "Test_idxKeyFooId2" UNIQUE ("key", "fooId"), CONSTRAINT "Test_fkFooTest" FOREIGN KEY ("fooId") REFERENCES "Foo" ("id") ON UPDATE CASCADE ON DELETE SET NULL, CONSTRAINT "Test_fkFooTest2" FOREIGN KEY ("key", "fooId") REFERENCES "Foo" ("uid", "id") ON UPDATE RESTRICT ON DELETE RESTRICT, CONSTRAINT "Test_fkFooTest3" FOREIGN KEY ("key", "fooId") REFERENCES "Foo" ("uid", "id") ON UPDATE RESTRICT ON DELETE RESTRICT);
+CREATE INDEX "Test_idxName" ON "Test" ("name");
+CREATE INDEX "Test_idxKeyName" ON "Test" ("key", "name");
+CREATE INDEX "Test_idxKeyName2" ON "Test" ("key", "name");
+    ]]></result>
+    <result driver="sqlsrv" version="2003"><![CDATA[
+CREATE TABLE [#Test] ([id] INT NOT NULL IDENTITY(1, 1) PRIMARY KEY, [key] NVARCHAR('255') NOT NULL, [name] NVARCHAR('255') DEFAULT 'TestDefault', [fooId] INT, CONSTRAINT [idxKey] UNIQUE ([key]), CONSTRAINT [idxKeyFooId] UNIQUE ([key], [fooId]), CONSTRAINT [idxKeyFooId2] UNIQUE ([key], [fooId]), CONSTRAINT [fkFooTest] FOREIGN KEY ([fooId]) REFERENCES [Foo] ([id]) ON UPDATE CASCADE ON DELETE SET NULL, CONSTRAINT [fkFooTest2] FOREIGN KEY ([key], [fooId]) REFERENCES [Foo] ([uid], [id]) ON UPDATE NO ACTION ON DELETE NO ACTION, CONSTRAINT [fkFooTest3] FOREIGN KEY ([key], [fooId]) REFERENCES [Foo] ([uid], [id]) ON UPDATE NO ACTION ON DELETE NO ACTION);
+CREATE INDEX [idxName] ON [#Test] ([name]);
+CREATE INDEX [idxKeyName] ON [#Test] ([key], [name]);
+CREATE INDEX [idxKeyName2] ON [#Test] ([key], [name]);
+    ]]></result>
+    <result driver="sqlsrv" version="2005"><![CDATA[
+CREATE TABLE [#Test] ([id] INT NOT NULL IDENTITY(1, 1) PRIMARY KEY, [key] NVARCHAR('255') NOT NULL, [name] NVARCHAR('255') DEFAULT 'TestDefault', [fooId] INT, CONSTRAINT [idxKey] UNIQUE ([key]), CONSTRAINT [idxKeyFooId] UNIQUE ([key], [fooId]), CONSTRAINT [idxKeyFooId2] UNIQUE ([key], [fooId]), CONSTRAINT [fkFooTest] FOREIGN KEY ([fooId]) REFERENCES [Foo] ([id]) ON UPDATE CASCADE ON DELETE SET NULL, CONSTRAINT [fkFooTest2] FOREIGN KEY ([key], [fooId]) REFERENCES [Foo] ([uid], [id]) ON UPDATE NO ACTION ON DELETE NO ACTION, CONSTRAINT [fkFooTest3] FOREIGN KEY ([key], [fooId]) REFERENCES [Foo] ([uid], [id]) ON UPDATE NO ACTION ON DELETE NO ACTION);
+CREATE INDEX [idxName] ON [#Test] ([name]);
+CREATE INDEX [idxKeyName] ON [#Test] ([key], [name]);
+CREATE INDEX [idxKeyName2] ON [#Test] ([key], [name]);
+    ]]></result>
+    <result driver="sqlsrv" version="2012"><![CDATA[
+CREATE TABLE [#Test] ([id] INT NOT NULL IDENTITY(1, 1) PRIMARY KEY, [key] NVARCHAR('255') NOT NULL, [name] NVARCHAR('255') DEFAULT 'TestDefault', [fooId] INT, CONSTRAINT [idxKey] UNIQUE ([key]), CONSTRAINT [idxKeyFooId] UNIQUE ([key], [fooId]), CONSTRAINT [idxKeyFooId2] UNIQUE ([key], [fooId]), CONSTRAINT [fkFooTest] FOREIGN KEY ([fooId]) REFERENCES [Foo] ([id]) ON UPDATE CASCADE ON DELETE SET NULL, CONSTRAINT [fkFooTest2] FOREIGN KEY ([key], [fooId]) REFERENCES [Foo] ([uid], [id]) ON UPDATE NO ACTION ON DELETE NO ACTION, CONSTRAINT [fkFooTest3] FOREIGN KEY ([key], [fooId]) REFERENCES [Foo] ([uid], [id]) ON UPDATE NO ACTION ON DELETE NO ACTION);
+CREATE INDEX [idxName] ON [#Test] ([name]);
+CREATE INDEX [idxKeyName] ON [#Test] ([key], [name]);
+CREATE INDEX [idxKeyName2] ON [#Test] ([key], [name]);
+    ]]></result>
+</test>

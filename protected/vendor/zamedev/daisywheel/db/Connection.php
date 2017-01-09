@@ -7,30 +7,30 @@ use daisywheel\db\builder\Builder;
 
 class Connection extends Component
 {
-    protected static $driverMap = array(
+    protected static $driverMap = [
         'mysql' => 'daisywheel\\db\\drivers\\MySqlDriver',
         'sqlite' => 'daisywheel\\db\\drivers\\SqliteDriver',
         'pgsql' => 'daisywheel\\db\\drivers\\PgSqlDriver',
         'sqlsrv' => 'daisywheel\\db\\drivers\\MsSqlDriver',
         'dblib' => 'daisywheel\\db\\drivers\\MsSqlDriver',
-    );
+    ];
 
     protected $driver = null;
     protected $prefix = '';
 
     public function init($config)
     {
-        $config->defaults(array(
+        $config->defaults([
             'charset' => 'utf8',
-            'driverOptions' => array(),
+            'driverOptions' => [],
             'prefix' => '',
-        ));
+        ]);
 
         $this->prefix = $config->get('prefix');
         $driverName = $this->extractDriverName($config->get('dsn'));
 
         if (!isset(self::$driverMap[$driverName])) {
-            throw new InvalidDriverException("Driver \"{$driverName}\" for dsn \"{$dsn}\" is not supported");
+            throw new InvalidDriverException("Driver \"{$driverName}\" for dsn \"" . $config->get('dsn') . '" is not supported');
         }
 
         $driverClass = self::$driverMap[$driverName];
@@ -74,27 +74,27 @@ class Connection extends Component
         return $this->driver->quoteIdentifier($name);
     }
 
-    public function queryAllRaw($sql, $params=array())
+    public function queryAllRaw($sql, $params=[])
     {
         return $this->driver->queryAll($this->prepare($sql), $params);
     }
 
-    public function queryRowRaw($sql, $params=array())
+    public function queryRowRaw($sql, $params=[])
     {
         return $this->driver->queryRow($this->prepare($sql), $params);
     }
 
-    public function queryColumnRaw($sql, $params=array())
+    public function queryColumnRaw($sql, $params=[])
     {
         return $this->driver->queryColumn($this->prepare($sql), $params);
     }
 
-    public function executeRaw($sql, $params=array())
+    public function executeRaw($sql, $params=[])
     {
         return $this->driver->execute($this->prepare($sql), $params);
     }
 
-    public function insertRaw($sql, $params=array())
+    public function insertRaw($sql, $params=[])
     {
         return $this->driver->insert($this->prepare($sql), $params);
     }

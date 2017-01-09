@@ -27,7 +27,7 @@ class ExpressionPart extends PartWithAlias
     const RELATION_AND = 'AND';
     const RELATION_OR = 'OR';
 
-    protected static $operatorOperandsCountMap = array(
+    protected static $operatorOperandsCountMap = [
         self::OPERATOR_EQ => 2,
         self::OPERATOR_NEQ => 2,
         self::OPERATOR_GT => 2,
@@ -45,9 +45,9 @@ class ExpressionPart extends PartWithAlias
         self::OPERATOR_NEG => 1,
         self::OPERATOR_NOT => 1,
         self::OPERATOR_BETWEEN => 3,
-    );
+    ];
 
-    protected static $operatorSqlOperatorMap = array(
+    protected static $operatorSqlOperatorMap = [
         self::OPERATOR_EQ => '=',
         self::OPERATOR_NEQ => '<>',
         self::OPERATOR_GT => '>',
@@ -65,11 +65,11 @@ class ExpressionPart extends PartWithAlias
         self::OPERATOR_NEG => '-',
         self::OPERATOR_NOT => 'NOT',
         self::OPERATOR_BETWEEN => 'BETWEEN',
-    );
+    ];
 
     protected $operator = null;
-    protected $operands = array();
-    protected $relations = array();
+    protected $operands = [];
+    protected $relations = [];
 
     public function __construct($operator, $operands)
     {
@@ -82,26 +82,26 @@ class ExpressionPart extends PartWithAlias
         }
 
         $this->operands = array_map(function($v) {
-            return ValuePart::create(array($v));
+            return ValuePart::create([$v]);
         }, $operands);
     }
 
     protected function magicAnd($expression)
     {
-        $this->relations[] = array(
+        $this->relations[] = [
             'type' => self::RELATION_AND,
             'expression' => $expression,
-        );
+        ];
 
         return $this;
     }
 
     protected function magicOr($expression)
     {
-        $this->relations[] = array(
+        $this->relations[] = [
             'type' => self::RELATION_OR,
             'expression' => $expression,
-        );
+        ];
 
         return $this;
     }

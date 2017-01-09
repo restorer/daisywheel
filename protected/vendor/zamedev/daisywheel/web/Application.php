@@ -8,26 +8,85 @@ use daisywheel\core\Config;
 
 class Application
 {
-    public static function run($appPath) {
+    /*
+
+    Варианты DI:
+
+    $app = $context->createComponent('application', [
+        'request' => new MyMockRequest(),
+    ]);
+
+    ----
+
+    public function __construct()
+    {
+        $this->depends([
+            'request' => [
+                'class' => 'daisywheel\web\Request',
+            ],
+            'response' => [
+                'class' => 'daisywheel\web\Response',
+            ],
+            'session' => [
+                'class' => 'daisywheel\web\Session',
+            ],
+            'bootstrapper' => [
+                'class' => 'app\bootstrapper',
+            ],
+        ]);
+    }
+
+    public static function init($config)
+    {
+        $this->request->...();
+    }
+
+    ----
+
+    protected function getRequest()
+    {
+        return $this->getDependency('request', [
+            'class' => 'daisywheel\web\Request',
+        ]);
+    }
+
+    protected function getResponse()
+    {
+        return $this->getDependency('response', [
+            'class' => 'daisywheel\web\Response',
+        ]);
+    }
+
+    ...
+
+    public static function init($config)
+    {
+        $this->request->...();
+    }
+
+    */
+
+    public static function run($appPath)
+    {
         ClassLoader::create('app', $appPath);
 
-        $context = new Context(Config::create("{$appPath}/config", 'web')->defaults(array(
+        $context = new Context(Config::create("{$appPath}/config", 'web')->defaults([
             'appPath' => $appPath,
-            'components' => array(
-                'request' => array(
+            'components' => [
+                'request' => [
                     'class' => 'daisywheel\web\Request',
-                ),
-                'response' => array(
+                ],
+                'response' => [
                     'class' => 'daisywheel\web\Response',
-                ),
-                'session' => array(
+                ],
+                'session' => [
                     'class' => 'daisywheel\web\Session',
-                ),
-                'bootstrapper' => array(
+                ],
+                'bootstrapper' => [
                     'class' => 'app\bootstrapper',
-                ),
-            ),
-        )));
+                ],
+            ],
+        ]));
 
         $context->bootstrapper->bootstrap();
         $context->bootstrapper->run();

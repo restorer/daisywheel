@@ -8,16 +8,16 @@ class SelectCommand extends CommandWithAlias implements Part
 {
     protected $fromInsert = null;
     protected $distinct = false;
-    protected $columns = array();
-    protected $fromList = array();
-    protected $joinList = array();
+    protected $columns = [];
+    protected $fromList = [];
+    protected $joinList = [];
     protected $where = null;
-    protected $groupByList = array();
+    protected $groupByList = [];
     protected $having = null;
-    protected $orderByList = array();
+    protected $orderByList = [];
     protected $offset = null;
     protected $limit = null;
-    protected $unionList = array();
+    protected $unionList = [];
 
     public function __construct($driver, $fromInsert=null)
     {
@@ -43,7 +43,7 @@ class SelectCommand extends CommandWithAlias implements Part
     public function columns()
     {
         $this->columns = array_map(function($v) {
-            return ValuePart::create(array($v));
+            return ValuePart::create([$v]);
         }, func_get_args());
 
         return $this;
@@ -84,7 +84,7 @@ class SelectCommand extends CommandWithAlias implements Part
 
     public function groupBy($column)
     {
-        $this->groupByList[] = ColumnPart::create(array($column));
+        $this->groupByList[] = ColumnPart::create([$column]);
         return $this;
     }
 
@@ -96,10 +96,10 @@ class SelectCommand extends CommandWithAlias implements Part
 
     public function orderBy($column, $asc=true)
     {
-        $this->orderByList[] = array(
-            'column' => ColumnPart::create(array($column)),
+        $this->orderByList[] = [
+            'column' => ColumnPart::create([$column]),
             'asc' => $asc,
-        );
+        ];
 
         return $this;
     }
@@ -118,20 +118,20 @@ class SelectCommand extends CommandWithAlias implements Part
 
     public function union($command)
     {
-        $this->unionList[] = array(
+        $this->unionList[] = [
             'command' => $command,
             'all' => false,
-        );
+        ];
 
         return $this;
     }
 
     public function unionAll($command)
     {
-        $this->unionList[] = array(
+        $this->unionList[] = [
             'command' => $command,
             'all' => true,
-        );
+        ];
 
         return $this;
     }

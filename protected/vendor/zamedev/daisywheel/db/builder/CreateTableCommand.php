@@ -7,10 +7,10 @@ use daisywheel\core\InvalidArgumentsException;
 class CreateTableCommand extends Command
 {
     protected $table = null;
-    protected $columns = array();
-    protected $uniqueList = array();
-    protected $indexList = array();
-    protected $foreignKeyList = array();
+    protected $columns = [];
+    protected $uniqueList = [];
+    protected $indexList = [];
+    protected $foreignKeyList = [];
 
     public function __construct($driver, $table)
     {
@@ -31,7 +31,7 @@ class CreateTableCommand extends Command
         }
 
         $this->columns = array_map(function($v) {
-            return ColumnPart::create(array($v));
+            return ColumnPart::create([$v]);
         }, $arguments);
 
         return $this;
@@ -48,7 +48,7 @@ class CreateTableCommand extends Command
 
             $arguments = $arguments[0];
         } else {
-            $arguments = array($arguments);
+            $arguments = [$arguments];
         }
 
         foreach ($arguments as $argument) {
@@ -56,10 +56,10 @@ class CreateTableCommand extends Command
                 throw new InvalidArgumentsException();
             }
 
-            $this->uniqueList[] = array(
+            $this->uniqueList[] = [
                 'name' => $argument[0],
                 'columns' => (is_array($argument[1]) ? $argument[1] : array_slice($argument, 1)),
-            );
+            ];
         }
 
         return $this;
@@ -76,7 +76,7 @@ class CreateTableCommand extends Command
 
             $arguments = $arguments[0];
         } else {
-            $arguments = array($arguments);
+            $arguments = [$arguments];
         }
 
         foreach ($arguments as $argument) {
@@ -84,10 +84,10 @@ class CreateTableCommand extends Command
                 throw new InvalidArgumentsException();
             }
 
-            $this->indexList[] = array(
+            $this->indexList[] = [
                 'name' => $argument[0],
                 'columns' => (is_array($argument[1]) ? $argument[1] : array_slice($argument, 1)),
-            );
+            ];
         }
 
         return $this;

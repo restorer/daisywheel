@@ -13,9 +13,9 @@ class ForeignReference extends Object
 
     protected $owner = null;
     protected $constraintName = '';
-    protected $columns = array();
+    protected $columns = [];
     protected $refTable = null;
-    protected $refColumns = array();
+    protected $refColumns = [];
     protected $onDelete = self::OPTION_RESTRICT;
     protected $onUpdate = self::OPTION_RESTRICT;
 

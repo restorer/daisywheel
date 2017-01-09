@@ -2,6 +2,6 @@
 
 namespace daisywheel\core;
 
-class InvalidDriverException extends BaseException
+class InvalidConfigurationException extends BaseException
 {
 }

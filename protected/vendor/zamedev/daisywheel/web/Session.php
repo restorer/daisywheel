@@ -61,7 +61,7 @@ class Session extends Component implements Countable, IteratorAggregate, ArrayAc
     // ArrayAccess
     public function offsetGet($offset)
     {
-        return (array_key_exists($key, $_SESSION) ? $_SESSION[$key] : null);
+        return (array_key_exists($offset, $_SESSION) ? $_SESSION[$offset] : null);
     }
 
     // ArrayAccess
