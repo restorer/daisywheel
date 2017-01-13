@@ -4,19 +4,19 @@ namespace daisywheel\querybuilder\ast\commands;
 
 use daisywheel\querybuilder\BuildSpec;
 use daisywheel\querybuilder\ast\Command;
-use daisywheel\querybuilder\ast\Table;
+use daisywheel\querybuilder\ast\parts\TablePart;
 
 class TruncateTableCommand implements Command
 {
     /** @var BuildSpec */
     protected $spec;
 
-    /** @var Table */
+    /** @var TablePart */
     protected $table;
 
     /**
-     * @param $spec BuildSpec
-     * @param $table Table
+     * @param BuildSpec $spec
+     * @param TablePart $table
      */
     public function __construct($spec, $table)
     {
@@ -25,20 +25,19 @@ class TruncateTableCommand implements Command
     }
 
     /**
-     * @implements Expr
+     * @see Command::build()
      */
     public function build()
     {
-        return $this->spec->buildTruncateTableCommand($this->table->getName(), $this->table->getTemporary());
+        return $this->spec->buildTruncateTableCommand($this->table->buildPart(), $this->table->getName());
     }
 
     /**
-     * @param $tableSql string
-     * @param $appendSql string
+     * @param string $truncateSql
      * @return string
      */
-    public static function basicBuild($tableSql, $appendSql)
+    public static function basicBuild($truncateSql)
     {
-        return ["TRUNCATE TABLE {$tableSql}{$appendSql}"];
+        return ["TRUNCATE TABLE {$truncateSql}"];
     }
 }

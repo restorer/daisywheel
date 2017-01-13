@@ -4,7 +4,7 @@ namespace daisywheel\querybuilder\ast\expr;
 
 use daisywheel\querybuilder\BuildSpec;
 use daisywheel\querybuilder\ast\Expr;
-use daisywheel\querybuilder\ast\Table;
+use daisywheel\querybuilder\ast\parts\TablePart;
 
 class ColumnExpr implements Expr
 {
@@ -14,13 +14,13 @@ class ColumnExpr implements Expr
     /** @var string */
     protected $name;
 
-    /** @var Table|null */
+    /** @var TablePart|null */
     protected $table;
 
     /**
-     * @param $spec BuildSpec
-     * @param $name string
-     * @param $table Table|null
+     * @param BuildSpec $spec
+     * @param string $name
+     * @param TablePart|null $table
      */
     public function __construct($spec, $name, $table = null)
     {
@@ -30,11 +30,11 @@ class ColumnExpr implements Expr
     }
 
     /**
-     * @implements Expr
+     * @see Expr::buildExpr()
      */
-    public function build()
+    public function buildExpr()
     {
-        return ($this->table === null ? '' : ($this->table->build() . '.'))
+        return ($this->table === null ? '' : ($this->table->buildPart() . '.'))
             . ($this->name === '*' ? '*' : $this->spec->quoteIdentifier($this->name));
     }
 }

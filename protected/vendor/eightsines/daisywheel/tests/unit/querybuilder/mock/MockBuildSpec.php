@@ -5,13 +5,14 @@ namespace daisywheel\tests\unit\querybuilder\mock;
 use daisywheel\querybuilder\BuildSpec;
 use daisywheel\querybuilder\ast\commands\DropIndexCommand;
 use daisywheel\querybuilder\ast\commands\DropTableCommand;
+use daisywheel\querybuilder\ast\commands\SelectCommand;
 use daisywheel\querybuilder\ast\commands\TruncateTableCommand;
 use daisywheel\querybuilder\ast\expr\FunctionExpr;
 
 class MockBuildSpec implements BuildSpec
 {
     /**
-     * @implements BuildSpec
+     * @see BuildSpec::quote()
      */
     public function quote($value)
     {
@@ -19,7 +20,7 @@ class MockBuildSpec implements BuildSpec
     }
 
     /**
-     * @implements BuildSpec
+     * @see BuildSpec::quoteIdentifier()
      */
     public function quoteIdentifier($name)
     {
@@ -27,7 +28,7 @@ class MockBuildSpec implements BuildSpec
     }
 
     /**
-     * @implements BuildSpec
+     * @see BuildSpec::quoteTable()
      */
     public function quoteTable($name, $temporary)
     {
@@ -35,43 +36,59 @@ class MockBuildSpec implements BuildSpec
     }
 
     /**
-     * @implements BuildSpec
+     * @see BuildSpec::quoteConstraint()
      */
     public function quoteConstraint($tableName, $constraintName)
     {
-        return '['
-            . preg_replace('/[^A-Za-z0-9_\-."\'` ]/u', '', $tableName)
-            . '_'
-            . preg_replace('/[^A-Za-z0-9_\-."\'` ]/u', '', $constraintName)
-            . ']';
+        return $this->quoteIdentifier($tableName . '_' . $constraintName);
     }
 
     /**
-     * @implements BuildSpec
+     * @see BuildSpec::buildFunctionExpr()
      */
     public function buildFunctionExpr($type, $operands)
     {
         switch ($type) {
             case FunctionExpr::TYPE_CONCAT:
                 return '(' . join(' || ', array_map(function ($v) {
-                    return $v->build();
+                    return $v->buildExpr();
                 }, $operands)) . ')';
 
             case FunctionExpr::TYPE_LENGTH:
-                return FunctionExpr::basicBuild('LEN', $operands);
+                return FunctionExpr::basicBuildExpr('LEN', $operands);
 
             case FunctionExpr::TYPE_SUBSTR:
-                return FunctionExpr::basicBuild('SUBSTRING', $operands);
+                return FunctionExpr::basicBuildExpr('SUBSTRING', $operands);
 
             case FunctionExpr::TYPE_TRIM:
-                return 'LTRIM(' . FunctionExpr::basicBuild('RTRIM', $operands) . ')';
+                return 'LTRIM(' . FunctionExpr::basicBuildExpr('RTRIM', $operands) . ')';
 
             default:
-                return FunctionExpr::basicBuild($type, $operands);
+                return FunctionExpr::basicBuildExpr($type, $operands);
         }
     }
 
-    // buildSelectCommand
+    /**
+     * @see BuildSpec::buildSelectCommand()
+     */
+    public function buildSelectCommand($startSql, $partsSql, $orderSql, $limit, $offset)
+    {
+        if ($offset === null) {
+            return $startSql
+                . ($limit !== null ? "TOP {$this->quote($limit)} " : '')
+                . $partsSql
+                . SelectCommand::buildOrderBy($orderSql)
+            ;
+        }
+
+        return "SELECT * FROM (SELECT TOP {$this->quote($limit)} * FROM ({$startSql}TOP {$this->quote($offset + $limit)} {$partsSql}"
+            . SelectCommand::buildOrderBy($orderSql)
+            . ')'
+            . SelectCommand::buildOrderBy($orderSql, true)
+            . ')'
+            . SelectCommand::buildOrderBy($orderSql);
+    }
+
     // buildInsertCommand
     // buildDeleteCommand
     // buildUpdateCommand
@@ -89,28 +106,26 @@ class MockBuildSpec implements BuildSpec
     */
 
     /**
-     * @implements BuildSpec
+     * @see BuildSpec::buildDropTableCommand()
      */
-    public function buildDropTableCommand($name, $temporary)
+    public function buildDropTableCommand($tableSql, $temporary)
     {
-        return DropTableCommand::basicBuild(($temporary ? 'TEMPORARY ' : '') . "TABLE {$this->quoteIdentifier($name)}");
+        return DropTableCommand::basicBuild($tableSql, ($temporary ? 'TEMPORARY ' : ''));
     }
 
     /**
-     * @implements BuildSpec
+     * @see BuildSpec::buildTruncateTableCommand()
      */
-    public function buildTruncateTableCommand($name, $temporary)
+    public function buildTruncateTableCommand($tableSql, $tableName)
     {
-        return TruncateTableCommand::basicBuild($this->quoteTable($name, $temporary), ' RESTART IDENTITY');
+        return TruncateTableCommand::basicBuild("${tableSql} RESTART IDENTITY");
     }
 
-    // buildCreateIndexCommand
-
     /**
-     * @implements BuildSpec
+     * @see BuildSpec::buildDropIndexCommand()
      */
-    public function buildDropIndexCommand($constraintSql, $tableName, $tableTemporary)
+    public function buildDropIndexCommand($table, $constraintSql)
     {
-        return DropIndexCommand::basicBuild($constraintSql, " ON {$this->quoteTable($tableName, $tableTemporary)}");
+        return DropIndexCommand::basicBuild("$constraintSql ON {$table->buildPart()}");
     }
 }

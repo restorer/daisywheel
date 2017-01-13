@@ -2,10 +2,9 @@
 
 namespace daisywheel\querybuilder\ast\commands;
 
-use daisywheel\querybuilder\BuildException;
 use daisywheel\querybuilder\BuildSpec;
 use daisywheel\querybuilder\ast\Command;
-use daisywheel\querybuilder\ast\Table;
+use daisywheel\querybuilder\ast\parts\TablePart;
 
 class DropIndexCommand implements Command
 {
@@ -15,48 +14,38 @@ class DropIndexCommand implements Command
     /** @var string */
     protected $name;
 
-    /** @var Table|null */
-    protected $table = null;
+    /** @var TablePart */
+    protected $table;
 
     /**
-     * @param $spec BuildSpec
-     * @param $name string
+     * @param BuildSpec $spec
+     * @param TablePart $table
+     * @param string $name
      */
-    public function __construct($spec, $name)
+    public function __construct($spec, $table, $name)
     {
         $this->spec = $spec;
+        $this->table = $table;
         $this->name = $name;
     }
 
-    public function on($nameOrTable)
-    {
-        $this->table = Table::create($this->spec, $nameOrTable);
-        return $this;
-    }
-
     /**
-     * @implements Expr
+     * @see Command::build()
      */
     public function build()
     {
-        if ($this->table === null) {
-            throw new BuildException("Can't build drop index without table (name = \"{$this->name}\")");
-        }
-
         return $this->spec->buildDropIndexCommand(
-            $this->spec->quoteConstraint($this->table->getName(), $this->name),
-            $this->table->getName(),
-            $this->table->getTemporary()
+            $this->table,
+            $this->spec->quoteConstraint($this->table->getName(), $this->name)
         );
     }
 
     /**
-     * @param $constraintSql string
-     * @param $appendSql string
+     * @param string $dropSql
      * @return string
      */
-    public static function basicBuild($constraintSql, $appendSql)
+    public static function basicBuild($dropSql)
     {
-        return ["DROP INDEX {$constraintSql}{$appendSql}"];
+        return ["DROP INDEX {$dropSql}"];
     }
 }

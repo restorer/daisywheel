@@ -35,9 +35,10 @@ class FunctionExpr implements Expr
     protected $operands;
 
     /**
-     * @param $spec BuildSpec
-     * @param $type string
-     * @param $operands Expr[]
+     * @param BuildSpec $spec
+     * @param string $type
+     * @param Expr[] $operands
+     * @throws BuildException
      */
     public function __construct($spec, $type, $operands)
     {
@@ -51,22 +52,22 @@ class FunctionExpr implements Expr
     }
 
     /**
-     * @implements Expr
+     * @see Expr::buildExpr()
      */
-    public function build()
+    public function buildExpr()
     {
         return $this->spec->buildFunctionExpr($this->type, $this->operands);
     }
 
     /**
-     * @param $type string
-     * @param $operands Expr[]
+     * @param string $type
+     * @param Expr[] $operands
      * @return string
      */
-    public static function basicBuild($type, $operands)
+    public static function basicBuildExpr($type, $operands)
     {
         return "{$type}(" . join(', ', array_map(function ($v) {
-            return $v->build();
+            return $v->buildExpr();
         }, $operands)) . ')';
     }
 }

@@ -19,10 +19,10 @@ class BuilderBasicTest extends \PHPUnit_Framework_TestCase
      */
     public function testVal()
     {
-        $this->assertEquals('NULL', $this->builder->val(null)->build());
-        $this->assertEquals('0', $this->builder->val(false)->build());
-        $this->assertEquals('1', $this->builder->val(true)->build());
-        $this->assertEquals("'Test\\'s'", $this->builder->val("Test's")->build());
+        $this->assertEquals('NULL', $this->builder->val(null)->buildExpr());
+        $this->assertEquals('0', $this->builder->val(false)->buildExpr());
+        $this->assertEquals('1', $this->builder->val(true)->buildExpr());
+        $this->assertEquals("'Test\\'s'", $this->builder->val("Test's")->buildExpr());
     }
 
     /**
@@ -39,8 +39,8 @@ class BuilderBasicTest extends \PHPUnit_Framework_TestCase
      */
     public function testParam()
     {
-        $this->assertEquals(':param', $this->builder->param(':param')->build());
-        $this->assertEquals(':param_25AZ', $this->builder->param(':param_25AZ')->build());
+        $this->assertEquals(':param', $this->builder->param(':param')->buildExpr());
+        $this->assertEquals(':param_25AZ', $this->builder->param(':param_25AZ')->buildExpr());
     }
 
     /**
@@ -57,12 +57,12 @@ class BuilderBasicTest extends \PHPUnit_Framework_TestCase
      */
     public function testCol()
     {
-        $this->assertEquals('*', $this->builder->col('*')->build());
-        $this->assertEquals('[name]', $this->builder->col('name')->build());
-        $this->assertEquals('[User].*', $this->builder->col('User', '*')->build());
-        $this->assertEquals('[User].[name]', $this->builder->col('User', 'name')->build());
-        $this->assertEquals('[#User].*', $this->builder->col($this->builder->temp('User'), '*')->build());
-        $this->assertEquals('[#User].[name]', $this->builder->col($this->builder->temp('User'), 'name')->build());
+        $this->assertEquals('*', $this->builder->col('*')->buildExpr());
+        $this->assertEquals('[name]', $this->builder->col('name')->buildExpr());
+        $this->assertEquals('[User].*', $this->builder->col('User', '*')->buildExpr());
+        $this->assertEquals('[User].[name]', $this->builder->col('User', 'name')->buildExpr());
+        $this->assertEquals('[#User].*', $this->builder->col($this->builder->temp('User'), '*')->buildExpr());
+        $this->assertEquals('[#User].[name]', $this->builder->col($this->builder->temp('User'), 'name')->buildExpr());
     }
 
     /**
@@ -70,11 +70,11 @@ class BuilderBasicTest extends \PHPUnit_Framework_TestCase
      */
     public function testAs()
     {
-        $this->assertEquals("'Test' AS [result]", $this->builder->as_($this->builder->val('Test'), 'result')->build());
+        $this->assertEquals("'Test' AS [result]", $this->builder->as_($this->builder->val('Test'), 'result')->buildExpr());
 
         $this->assertEquals(
             '[#User].[name] AS [result]',
-            $this->builder->as_($this->builder->col($this->builder->temp('User'), 'name'), 'result')->build()
+            $this->builder->as_($this->builder->col($this->builder->temp('User'), 'name'), 'result')->buildExpr()
         );
     }
 
@@ -83,6 +83,6 @@ class BuilderBasicTest extends \PHPUnit_Framework_TestCase
      */
     public function testTemp()
     {
-        $this->assertEquals('[#User]', $this->builder->temp('User')->build());
+        $this->assertEquals('[#User]', $this->builder->temp('User')->buildPart());
     }
 }

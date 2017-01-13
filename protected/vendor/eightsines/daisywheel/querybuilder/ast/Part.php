@@ -2,10 +2,10 @@
 
 namespace daisywheel\querybuilder\ast;
 
-interface Expr
+interface Part
 {
     /**
      * @return string
      */
-    public function buildExpr();
+    public function buildPart();
 }

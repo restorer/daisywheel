@@ -11,7 +11,8 @@ class PlaceholderExpr implements Expr
     protected $name;
 
     /**
-     * @param $name string
+     * @param string $name
+     * @throws BuildException
      */
     public function __construct($name)
     {
@@ -23,9 +24,9 @@ class PlaceholderExpr implements Expr
     }
 
     /**
-     * @implements Expr
+     * @see Expr::buildExpr()
      */
-    public function build()
+    public function buildExpr()
     {
         return $this->name;
     }

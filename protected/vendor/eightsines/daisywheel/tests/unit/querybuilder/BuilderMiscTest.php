@@ -19,6 +19,6 @@ class BuilderMiscTest extends \PHPUnit_Framework_TestCase
      */
     public function testMagicCall()
     {
-        $this->assertEquals("'Test' AS [result]", $this->builder->as($this->builder->val('Test'), 'result')->build());
+        $this->assertEquals("'Test' AS [result]", $this->builder->as($this->builder->val('Test'), 'result')->buildExpr());
     }
 }

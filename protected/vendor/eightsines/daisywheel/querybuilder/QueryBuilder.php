@@ -2,9 +2,11 @@
 
 namespace daisywheel\querybuilder;
 
-use daisywheel\querybuilder\ast\Table;
+use daisywheel\querybuilder\ast\commands\CreateIndexCommand;
+use daisywheel\querybuilder\ast\commands\DeleteCommand;
 use daisywheel\querybuilder\ast\commands\DropIndexCommand;
 use daisywheel\querybuilder\ast\commands\DropTableCommand;
+use daisywheel\querybuilder\ast\commands\SelectCommand;
 use daisywheel\querybuilder\ast\commands\TruncateTableCommand;
 use daisywheel\querybuilder\ast\expr\AliasExpr;
 use daisywheel\querybuilder\ast\expr\BasicExpr;
@@ -12,14 +14,20 @@ use daisywheel\querybuilder\ast\expr\ColumnExpr;
 use daisywheel\querybuilder\ast\expr\FunctionExpr;
 use daisywheel\querybuilder\ast\expr\PlaceholderExpr;
 use daisywheel\querybuilder\ast\expr\ValueExpr;
+use daisywheel\querybuilder\ast\parts\TablePart;
 
+/**
+ * @method AliasExpr as(Expr $expr, string $alias)
+ * @method BasicExpr and(Expr|Expr[] $a, Expr|null $b)
+ * @method BasicExpr or(Expr|Expr[] $a, Expr|null $b)
+ */
 class QueryBuilder
 {
     /** @var BuildSpec */
     protected $spec;
 
     /**
-     * @param $spec BuildSpec
+     * @param BuildSpec $spec
      */
     public function __construct($spec)
     {
@@ -27,11 +35,12 @@ class QueryBuilder
     }
 
     /**
+     * @param Expr[] $columns
      * @return SelectCommand
      */
-    public function select()
+    public function select($columns = null)
     {
-        // return new SelectCommand();
+        return new SelectCommand($this->spec, BuildHelper::args(func_get_args()));
     }
 
     /**
@@ -51,11 +60,12 @@ class QueryBuilder
     }
 
     /**
+     * @param string|TablePart $table
      * @return DeleteCommand
      */
-    public function deleteFrom()
+    public function deleteFrom($table)
     {
-        // return new DeleteCommand();
+        return new DeleteCommand(TablePart::create($this->spec, $table));
     }
 
     /**
@@ -67,38 +77,42 @@ class QueryBuilder
     }
 
     /**
-     * @param $name string|Table
+     * @param string|TablePart $table
      * @return DropTableCommand
      */
-    public function dropTable($nameOrTable)
+    public function dropTable($table)
     {
-        return new DropTableCommand($this->spec, Table::create($this->spec, $nameOrTable));
+        return new DropTableCommand($this->spec, TablePart::create($this->spec, $table));
     }
 
     /**
-     * @param $name string|Table
+     * @param string|TablePart $table
      * @return TruncateTableCommand
      */
-    public function truncateTable($nameOrTable)
+    public function truncateTable($table)
     {
-        return new TruncateTableCommand($this->spec, Table::create($this->spec, $nameOrTable));
+        return new TruncateTableCommand($this->spec, TablePart::create($this->spec, $table));
     }
 
     /**
+     * @param string|TablePart $table
+     * @param string $name
+     * @param string|string[] $columns
      * @return CreateIndexCommand
      */
-    public function createIndex()
+    public function createIndex($table, $name, $columns)
     {
-        // return new CreateIndexCommand();
+        return new CreateIndexCommand($this->spec, TablePart::create($this->spec, $table), $name, $columns);
     }
 
     /**
-     * @param $name string
+     * @param string|TablePart $table
+     * @param string $name
      * @return DropIndexCommand
      */
-    public function dropIndex($name)
+    public function dropIndex($table, $name)
     {
-        return new DropIndexCommand($this->spec, $name);
+        return new DropIndexCommand($this->spec, TablePart::create($this->spec, $table), $name);
     }
 
     //
@@ -106,7 +120,7 @@ class QueryBuilder
     //
 
     /**
-     * @param $value mixed
+     * @param mixed $value
      * @return ValueExpr
      */
     public function val($value)
@@ -115,7 +129,7 @@ class QueryBuilder
     }
 
     /**
-     * @param $name string
+     * @param string $name
      * @return PlaceholderExpr
      */
     public function param($name)
@@ -124,8 +138,8 @@ class QueryBuilder
     }
 
     /**
-     * @param $columnOrTable string|Table
-     * @param $column string|null
+     * @param string|TablePart $nameOrTable
+     * @param string|null $name
      * @return ColumnExpr
      */
     public function col($nameOrTable, $name = null)
@@ -133,13 +147,13 @@ class QueryBuilder
         if ($name === null) {
             return new ColumnExpr($this->spec, $nameOrTable);
         } else {
-            return new ColumnExpr($this->spec, $name, Table::create($this->spec, $nameOrTable));
+            return new ColumnExpr($this->spec, $name, TablePart::create($this->spec, $nameOrTable));
         }
     }
 
     /**
-     * @param $expr Expr
-     * @param $alias string
+     * @param Expr $expr
+     * @param string $alias
      * @return AliasExpr
      */
     public function as_($expr, $alias)
@@ -148,12 +162,12 @@ class QueryBuilder
     }
 
     /**
-     * @param $name string
-     * @return Table
+     * @param string $name
+     * @return TablePart
      */
     public function temp($name)
     {
-        return Table::create($this->spec, $name, true);
+        return new TablePart($this->spec, $name, true);
     }
 
     //
@@ -161,8 +175,8 @@ class QueryBuilder
     //
 
     /**
-     * @param $a Expr|Expr[]
-     * @param $b Expr|null
+     * @param Expr|Expr[] $a
+     * @param Expr|null $b
      * @return BasicExpr
      */
     public function and_($a, $b = null)
@@ -171,8 +185,8 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr|Expr[]
-     * @param $b Expr|null
+     * @param Expr|Expr[] $a
+     * @param Expr|null $b
      * @return BasicExpr
      */
     public function or_($a, $b = null)
@@ -181,8 +195,8 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
-     * @param $b Expr
+     * @param Expr $a
+     * @param Expr $b
      * @return BasicExpr
      */
     public function eq($a, $b)
@@ -191,8 +205,8 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
-     * @param $b Expr
+     * @param Expr $a
+     * @param Expr $b
      * @return BasicExpr
      */
     public function neq($a, $b)
@@ -201,8 +215,8 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
-     * @param $b Expr
+     * @param Expr $a
+     * @param Expr $b
      * @return BasicExpr
      */
     public function gt($a, $b)
@@ -211,8 +225,8 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
-     * @param $b Expr
+     * @param Expr $a
+     * @param Expr $b
      * @return BasicExpr
      */
     public function gte($a, $b)
@@ -221,8 +235,8 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
-     * @param $b Expr
+     * @param Expr $a
+     * @param Expr $b
      * @return BasicExpr
      */
     public function lt($a, $b)
@@ -231,8 +245,8 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
-     * @param $b Expr
+     * @param Expr $a
+     * @param Expr $b
      * @return BasicExpr
      */
     public function lte($a, $b)
@@ -241,8 +255,8 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
-     * @param $b Expr[]|PlaceholderExpr|SelectCommand
+     * @param Expr $a
+     * @param Expr[]|PlaceholderExpr|SelectCommand $b
      * @return BasicExpr
      */
     public function in($a, $b)
@@ -251,8 +265,8 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
-     * @param $b Expr[]|PlaceholderExpr|SelectCommand
+     * @param Expr $a
+     * @param Expr[]|PlaceholderExpr|SelectCommand $b
      * @return BasicExpr
      */
     public function notIn($a, $b)
@@ -261,7 +275,7 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
+     * @param Expr $a
      * @return BasicExpr
      */
     public function isNull($a)
@@ -270,7 +284,7 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
+     * @param Expr $a
      * @return BasicExpr
      */
     public function isNotNull($a)
@@ -279,8 +293,8 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr|Expr[]
-     * @param $b Expr|null
+     * @param Expr|Expr[] $a
+     * @param Expr|null $b
      * @return BasicExpr
      */
     public function add($a, $b = null)
@@ -289,8 +303,8 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr|Expr[]
-     * @param $b Expr|null
+     * @param Expr|Expr[] $a
+     * @param Expr|null $b
      * @return BasicExpr
      */
     public function sub($a, $b = null)
@@ -299,8 +313,8 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr|Expr[]
-     * @param $b Expr|null
+     * @param Expr|Expr[] $a
+     * @param Expr|null $b
      * @return BasicExpr
      */
     public function mul($a, $b = null)
@@ -309,8 +323,8 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr|Expr[]
-     * @param $b Expr|null
+     * @param Expr|Expr[] $a
+     * @param Expr|null $b
      * @return BasicExpr
      */
     public function div($a, $b = null)
@@ -319,7 +333,7 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
+     * @param Expr $a
      * @return BasicExpr
      */
     public function neg($a)
@@ -328,7 +342,7 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
+     * @param Expr $a
      * @return BasicExpr
      */
     public function not($a)
@@ -337,8 +351,8 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
-     * @param $b Expr
+     * @param Expr $a
+     * @param Expr $b
      * @return BasicExpr
      */
     public function like($a, $b)
@@ -347,9 +361,9 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
-     * @param $b Expr
-     * @param $c Expr
+     * @param Expr $a
+     * @param Expr $b
+     * @param Expr $c
      * @return BasicExpr
      */
     public function between($a, $b, $c)
@@ -362,7 +376,7 @@ class QueryBuilder
     //
 
     /**
-     * @param $a Expr
+     * @param Expr $a
      * @return FunctionExpr
      */
     public function avg($a)
@@ -371,7 +385,7 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
+     * @param Expr $a
      * @return FunctionExpr
      */
     public function count($a)
@@ -380,7 +394,7 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
+     * @param Expr $a
      * @return FunctionExpr
      */
     public function max($a)
@@ -389,7 +403,7 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
+     * @param Expr $a
      * @return FunctionExpr
      */
     public function min($a)
@@ -398,7 +412,7 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
+     * @param Expr $a
      * @return FunctionExpr
      */
     public function sum($a)
@@ -407,8 +421,8 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr|Expr[]
-     * @param $b Expr|null
+     * @param Expr|Expr[] $a
+     * @param Expr|null $b
      * @return FunctionExpr
      */
     public function coalesce($a, $b = null)
@@ -417,7 +431,7 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
+     * @param Expr $a
      * @return FunctionExpr
      */
     public function abs($a)
@@ -426,7 +440,7 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
+     * @param Expr $a
      * @return FunctionExpr
      */
     public function round($a)
@@ -435,8 +449,8 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr|Expr[]
-     * @param $b Expr|null
+     * @param Expr|Expr[] $a
+     * @param Expr|null $b
      * @return FunctionExpr
      */
     public function concat($a, $b = null)
@@ -445,7 +459,7 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
+     * @param Expr $a
      * @return FunctionExpr
      */
     public function length($a)
@@ -454,7 +468,7 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
+     * @param Expr $a
      * @return FunctionExpr
      */
     public function lower($a)
@@ -463,7 +477,7 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
+     * @param Expr $a
      * @return FunctionExpr
      */
     public function ltrim($a)
@@ -472,7 +486,7 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
+     * @param Expr $a
      * @return FunctionExpr
      */
     public function rtrim($a)
@@ -481,9 +495,9 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
-     * @param $b Expr
-     * @param $c Expr|null
+     * @param Expr $a
+     * @param Expr $b
+     * @param Expr|null $c
      * @return FunctionExpr
      */
     public function substr($a, $b, $c = null)
@@ -496,7 +510,7 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
+     * @param Expr $a
      * @return FunctionExpr
      */
     public function trim($a)
@@ -505,7 +519,7 @@ class QueryBuilder
     }
 
     /**
-     * @param $a Expr
+     * @param Expr $a
      * @return FunctionExpr
      */
     public function upper($a)
@@ -517,6 +531,13 @@ class QueryBuilder
     // Misc
     //
 
+    /**
+     * @internal
+     * @param string $name
+     * @param mixed $arguments
+     * @throws BuildException
+     * @return mixed
+     */
     public function __call($name, $arguments)
     {
         if (method_exists($this, "{$name}_")) {

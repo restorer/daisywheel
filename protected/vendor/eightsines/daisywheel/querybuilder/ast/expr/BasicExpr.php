@@ -4,6 +4,7 @@ namespace daisywheel\querybuilder\ast\expr;
 
 use daisywheel\querybuilder\BuildException;
 use daisywheel\querybuilder\ast\Expr;
+use daisywheel\querybuilder\ast\commands\SelectCommand;
 
 class BasicExpr implements Expr
 {
@@ -27,10 +28,10 @@ class BasicExpr implements Expr
     protected $extraSql;
 
     /**
-     * @param $type string
-     * @param $operator string
-     * @param $operands Expr[]
-     * @param $extraSql string|null
+     * @param string $type
+     * @param string $operator
+     * @param Expr[] $operands
+     * @param string|null $extraSql
      */
     protected function __construct($type, $operator, $operands, $extraSql = null)
     {
@@ -41,51 +42,49 @@ class BasicExpr implements Expr
     }
 
     /**
-     * @implements Expr
+     * @see Expr::buildExpr()
      */
-    public function build()
+    public function buildExpr()
     {
-        if ($this->type === self::TYPE_UNARY) {
-            return "({$this->operator} {$this->operands[0]->build()})";
-        }
+        switch ($this->type) {
+            case self::TYPE_UNARY:
+                return "({$this->operator} {$this->operands[0]->buildExpr()})";
 
-        if ($this->type === self::TYPE_RIGHT_HAND) {
-            return "({$this->operands[0]->build()} {$this->operator})";
-        }
+            case self::TYPE_RIGHT_HAND:
+                return "({$this->operands[0]->buildExpr()} {$this->operator})";
 
-        if ($this->type === self::TYPE_BETWEEN) {
-            return "({$this->operands[0]->build()} {$this->operator} {$this->operands[1]->build()} AND {$this->operands[2]->build()})";
-        }
+            case self::TYPE_BETWEEN:
+                return "({$this->operands[0]->buildExpr()} {$this->operator} {$this->operands[1]->buildExpr()} AND {$this->operands[2]->buildExpr()})";
 
-        if ($this->type === self::TYPE_LIST) {
-            if (!is_array($this->operands[1])) {
-                return "({$this->operands[0]->build()} {$this->operator} {$this->operands[1]->build()})";
+            case self::TYPE_LIST: {
+                if ($this->operands[1] instanceof Expr) {
+                    return "({$this->operands[0]->buildExpr()} {$this->operator} {$this->operands[1]->buildExpr()})";
+                } elseif (empty($this->operands[1])) {
+                    return "({$this->extraSql})";
+                }
+
+                return "({$this->operands[0]->buildExpr()} {$this->operator} (" . join(', ', array_map(function ($v) {
+                    return $v->buildExpr();
+                }, $this->operands[1])) . '))';
             }
-
-            if (empty($this->operands[1])) {
-                return "({$this->extraSql})";
-            }
-
-            return "({$this->operands[0]->build()} {$this->operator} (" . join(', ', array_map(function ($v) {
-                return $v->build();
-            }, $this->operands[1])) . '))';
         }
 
         if ($this->type === self::TYPE_EQ
             && ($this->operands[1] instanceof ValueExpr)
             && $this->operands[1]->isNull()
         ) {
-            return "({$this->operands[0]->build()} {$this->extraSql})";
+            return "({$this->operands[0]->buildExpr()} {$this->extraSql})";
         }
 
         return '(' . join(" {$this->operator} ", array_map(function ($v) {
-            return $v->build();
+            return $v->buildExpr();
         }, $this->operands)) . ')';
     }
 
     /**
-     * @param $operator string
-     * @param $operands Expr[]
+     * @param string $operator
+     * @param Expr[] $operands
+     * @throws BuildException
      * @return BasicExpr
      */
     public static function createUnary($operator, $operands)
@@ -98,8 +97,9 @@ class BasicExpr implements Expr
     }
 
     /**
-     * @param $operator string
-     * @param $operands Expr[]
+     * @param string $operator
+     * @param Expr[] $operands
+     * @throws BuildException
      * @return BasicExpr
      */
     public static function createBinary($operator, $operands)
@@ -112,8 +112,9 @@ class BasicExpr implements Expr
     }
 
     /**
-     * @param $operator string
-     * @param $operands Expr[]
+     * @param string $operator
+     * @param Expr[] $operands
+     * @throws BuildException
      * @return BasicExpr
      */
     public static function createMulti($operator, $operands)
@@ -126,9 +127,10 @@ class BasicExpr implements Expr
     }
 
     /**
-     * @param $operator string
-     * @param $operands Expr[]
-     * @param $nullValueSql string
+     * @param string $operator
+     * @param Expr[] $operands
+     * @param string $nullValueSql
+     * @throws BuildException
      * @return BasicExpr
      */
     public static function createEq($operator, $operands, $nullValueSql)
@@ -141,9 +143,10 @@ class BasicExpr implements Expr
     }
 
     /**
-     * @param $operator string
-     * @param $operands Expr[]
-     * @param $emptyListValueSql string
+     * @param string $operator
+     * @param Expr[] $operands
+     * @param string $emptyListValueSql
+     * @throws BuildException
      * @return BasicExpr
      */
     public static function createList($operator, $operands, $emptyListValueSql)
@@ -163,8 +166,9 @@ class BasicExpr implements Expr
     }
 
     /**
-     * @param $operator string
-     * @param $operands Expr[]
+     * @param string $operator
+     * @param Expr[] $operands
+     * @throws BuildException
      * @return BasicExpr
      */
     public static function createRightHand($operator, $operands)
@@ -177,8 +181,9 @@ class BasicExpr implements Expr
     }
 
     /**
-     * @param $operator string
-     * @param $operands Expr[]
+     * @param string $operator
+     * @param Expr[] $operands
+     * @throws BuildException
      * @return BasicExpr
      */
     public static function createBetween($operator, $operands)

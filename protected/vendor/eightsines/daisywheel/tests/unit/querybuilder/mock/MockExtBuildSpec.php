@@ -5,13 +5,13 @@ namespace daisywheel\tests\unit\querybuilder\mock;
 class MockExtBuildSpec extends MockBuildSpec
 {
     /**
-     * @override
+     * @see MockBuildSpec::buildTruncateTableCommand()
      */
-    public function buildTruncateTableCommand($name, $temporary)
+    public function buildTruncateTableCommand($tableSql, $tableName)
     {
         return [
-            "DELETE FROM {$this->quoteTable($name, $temporary)}",
-            "DELETE FROM SQLITE_SEQUENCE WHERE name={$this->quote($name)}",
+            "DELETE FROM {$tableSql}",
+            "DELETE FROM SQLITE_SEQUENCE WHERE name = {$this->quote($tableName)}",
         ];
     }
 }

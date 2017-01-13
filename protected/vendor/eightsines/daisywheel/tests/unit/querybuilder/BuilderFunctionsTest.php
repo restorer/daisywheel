@@ -19,7 +19,7 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
      */
     public function testAvg()
     {
-        $this->assertEquals('AVG([likes])', $this->builder->avg($this->builder->col('likes'))->build());
+        $this->assertEquals('AVG([likes])', $this->builder->avg($this->builder->col('likes'))->buildExpr());
     }
 
     /**
@@ -27,7 +27,7 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
      */
     public function testCount()
     {
-        $this->assertEquals('AVG(*)', $this->builder->avg($this->builder->col('*'))->build());
+        $this->assertEquals('AVG(*)', $this->builder->avg($this->builder->col('*'))->buildExpr());
     }
 
     /**
@@ -35,7 +35,7 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
      */
     public function testMax()
     {
-        $this->assertEquals('MAX([likes])', $this->builder->max($this->builder->col('likes'))->build());
+        $this->assertEquals('MAX([likes])', $this->builder->max($this->builder->col('likes'))->buildExpr());
     }
 
     /**
@@ -43,7 +43,7 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
      */
     public function testMin()
     {
-        $this->assertEquals('MIN([likes])', $this->builder->min($this->builder->col('likes'))->build());
+        $this->assertEquals('MIN([likes])', $this->builder->min($this->builder->col('likes'))->buildExpr());
     }
 
     /**
@@ -51,7 +51,7 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
      */
     public function testSum()
     {
-        $this->assertEquals('SUM([likes])', $this->builder->sum($this->builder->col('likes'))->build());
+        $this->assertEquals('SUM([likes])', $this->builder->sum($this->builder->col('likes'))->buildExpr());
     }
 
     /**
@@ -59,24 +59,24 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
      */
     public function testCoalesce()
     {
-        $this->assertEquals('COALESCE([likes])', $this->builder->coalesce($this->builder->col('likes'))->build());
+        $this->assertEquals('COALESCE([likes])', $this->builder->coalesce($this->builder->col('likes'))->buildExpr());
 
         $this->assertEquals('COALESCE([likes], 1)', $this->builder->coalesce(
             $this->builder->col('likes'),
             $this->builder->val(true)
-        )->build());
+        )->buildExpr());
 
         $this->assertEquals('COALESCE([likes], NULL, 1)', $this->builder->coalesce(
             $this->builder->col('likes'),
             $this->builder->val(null),
             $this->builder->val(true)
-        )->build());
+        )->buildExpr());
 
         $this->assertEquals('COALESCE([likes], NULL, 1)', $this->builder->coalesce([
             $this->builder->col('likes'),
             $this->builder->val(null),
             $this->builder->val(true)
-        ])->build());
+        ])->buildExpr());
     }
 
     /**
@@ -84,7 +84,7 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
      */
     public function testAbs()
     {
-        $this->assertEquals('ABS([likes])', $this->builder->abs($this->builder->col('likes'))->build());
+        $this->assertEquals('ABS([likes])', $this->builder->abs($this->builder->col('likes'))->buildExpr());
     }
 
     /**
@@ -92,7 +92,7 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
      */
     public function testRound()
     {
-        $this->assertEquals('ROUND([likes])', $this->builder->round($this->builder->col('likes'))->build());
+        $this->assertEquals('ROUND([likes])', $this->builder->round($this->builder->col('likes'))->buildExpr());
     }
 
     /**
@@ -100,24 +100,24 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
      */
     public function testConcat()
     {
-        $this->assertEquals("('This')", $this->builder->concat($this->builder->val('This'))->build());
+        $this->assertEquals("('This')", $this->builder->concat($this->builder->val('This'))->buildExpr());
 
         $this->assertEquals("('This' || 'is')", $this->builder->concat(
             $this->builder->val('This'),
             $this->builder->val('is')
-        )->build());
+        )->buildExpr());
 
         $this->assertEquals("('This' || 'is' || 'the test')", $this->builder->concat(
             $this->builder->val('This'),
             $this->builder->val('is'),
             $this->builder->val('the test')
-        )->build());
+        )->buildExpr());
 
         $this->assertEquals("('This' || 'is' || 'the test')", $this->builder->concat([
             $this->builder->val('This'),
             $this->builder->val('is'),
             $this->builder->val('the test'),
-        ])->build());
+        ])->buildExpr());
     }
 
     /**
@@ -125,7 +125,7 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
      */
     public function testLength()
     {
-        $this->assertEquals('LEN([name])', $this->builder->length($this->builder->col('name'))->build());
+        $this->assertEquals('LEN([name])', $this->builder->length($this->builder->col('name'))->buildExpr());
     }
 
     /**
@@ -133,7 +133,7 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
      */
     public function testLower()
     {
-        $this->assertEquals('LOWER([name])', $this->builder->lower($this->builder->col('name'))->build());
+        $this->assertEquals('LOWER([name])', $this->builder->lower($this->builder->col('name'))->buildExpr());
     }
 
     /**
@@ -141,7 +141,7 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
      */
     public function testLtrim()
     {
-        $this->assertEquals('LTRIM([name])', $this->builder->ltrim($this->builder->col('name'))->build());
+        $this->assertEquals('LTRIM([name])', $this->builder->ltrim($this->builder->col('name'))->buildExpr());
     }
 
     /**
@@ -149,7 +149,7 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
      */
     public function testRtrim()
     {
-        $this->assertEquals('RTRIM([name])', $this->builder->rtrim($this->builder->col('name'))->build());
+        $this->assertEquals('RTRIM([name])', $this->builder->rtrim($this->builder->col('name'))->buildExpr());
     }
 
     /**
@@ -160,13 +160,13 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("SUBSTRING([name], '2')", $this->builder->substr(
             $this->builder->col('name'),
             $this->builder->val(2)
-        )->build());
+        )->buildExpr());
 
         $this->assertEquals("SUBSTRING([name], '2', '3')", $this->builder->substr(
             $this->builder->col('name'),
             $this->builder->val(2),
             $this->builder->val(3)
-        )->build());
+        )->buildExpr());
     }
 
     /**
@@ -174,7 +174,7 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
      */
     public function testTrim()
     {
-        $this->assertEquals('LTRIM(RTRIM([name]))', $this->builder->trim($this->builder->col('name'))->build());
+        $this->assertEquals('LTRIM(RTRIM([name]))', $this->builder->trim($this->builder->col('name'))->buildExpr());
     }
 
     /**
@@ -182,6 +182,6 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
      */
     public function testUpper()
     {
-        $this->assertEquals('UPPER([name])', $this->builder->upper($this->builder->col('name'))->build());
+        $this->assertEquals('UPPER([name])', $this->builder->upper($this->builder->col('name'))->buildExpr());
     }
 }

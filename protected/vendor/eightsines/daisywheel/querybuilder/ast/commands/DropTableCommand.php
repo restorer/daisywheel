@@ -4,19 +4,19 @@ namespace daisywheel\querybuilder\ast\commands;
 
 use daisywheel\querybuilder\BuildSpec;
 use daisywheel\querybuilder\ast\Command;
-use daisywheel\querybuilder\ast\Table;
+use daisywheel\querybuilder\ast\parts\TablePart;
 
 class DropTableCommand implements Command
 {
     /** @var BuildSpec */
     protected $spec;
 
-    /** @var Table */
+    /** @var TablePart */
     protected $table;
 
     /**
-     * @param $spec BuildSpec
-     * @param $table Table
+     * @param BuildSpec $spec
+     * @param TablePart $table
      */
     public function __construct($spec, $table)
     {
@@ -25,19 +25,20 @@ class DropTableCommand implements Command
     }
 
     /**
-     * @implements Expr
+     * @see Command::build()
      */
     public function build()
     {
-        return $this->spec->buildDropTableCommand($this->table->getName(), $this->table->getTemporary());
+        return $this->spec->buildDropTableCommand($this->table->buildPart(), $this->table->getTemporary());
     }
 
     /**
-     * @param $tableSql string
+     * @param string $tableSql
+     * @param string $prependSql
      * @return string
      */
-    public static function basicBuild($tableSql)
+    public static function basicBuild($tableSql, $prependSql)
     {
-        return ["DROP {$tableSql}"];
+        return ["DROP {$prependSql}TABLE {$tableSql}"];
     }
 }

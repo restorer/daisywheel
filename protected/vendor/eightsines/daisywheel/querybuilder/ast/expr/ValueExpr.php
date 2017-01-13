@@ -15,8 +15,9 @@ class ValueExpr implements Expr
     protected $value;
 
     /**
-     * @param $spec BuildSpec
-     * @param $value mixed
+     * @param BuildSpec $spec
+     * @param mixed $value
+     * @throws BuildException
      */
     public function __construct($spec, $value)
     {
@@ -28,15 +29,18 @@ class ValueExpr implements Expr
         $this->value = $value;
     }
 
+    /**
+     * @return boolean
+     */
     public function isNull()
     {
         return ($this->value === null);
     }
 
     /**
-     * @implements Expr
+     * @see Expr::buildExpr()
      */
-    public function build()
+    public function buildExpr()
     {
         if ($this->value === null) {
             return 'NULL';

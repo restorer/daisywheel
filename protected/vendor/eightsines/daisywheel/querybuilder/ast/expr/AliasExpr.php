@@ -2,6 +2,7 @@
 
 namespace daisywheel\querybuilder\ast\expr;
 
+use daisywheel\querybuilder\BuildHelper;
 use daisywheel\querybuilder\BuildSpec;
 use daisywheel\querybuilder\ast\Expr;
 
@@ -17,9 +18,9 @@ class AliasExpr implements Expr
     protected $alias;
 
     /**
-     * @param $spec BuildSpec
-     * @param $expr Expr
-     * @param $alias string
+     * @param BuildSpec $spec
+     * @param Expr $expr
+     * @param string $alias
      */
     public function __construct($spec, $expr, $alias)
     {
@@ -29,10 +30,10 @@ class AliasExpr implements Expr
     }
 
     /**
-     * @implements Expr
+     * @see Expr::buildExpr()
      */
-    public function build()
+    public function buildExpr()
     {
-        return "{$this->expr->build()} AS {$this->spec->quoteIdentifier($this->alias)}";
+        return "{$this->expr->buildExpr()} AS {$this->spec->quoteIdentifier($this->alias)}";
     }
 }

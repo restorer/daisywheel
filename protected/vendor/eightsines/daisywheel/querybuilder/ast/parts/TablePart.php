@@ -1,10 +1,11 @@
 <?php
 
-namespace daisywheel\querybuilder\ast;
+namespace daisywheel\querybuilder\ast\parts;
 
 use daisywheel\querybuilder\BuildSpec;
+use daisywheel\querybuilder\ast\Part;
 
-class Table
+class TablePart implements Part
 {
     /** @var BuildSpec */
     protected $spec;
@@ -16,11 +17,11 @@ class Table
     protected $temporary;
 
     /**
-     * @param $spec BuildSpec
-     * @param $name string
-     * @param $temporary boolean
+     * @param BuildSpec $spec
+     * @param string $name
+     * @param boolean $temporary
      */
-    protected function __construct($spec, $name, $temporary)
+    public function __construct($spec, $name, $temporary)
     {
         $this->spec = $spec;
         $this->name = $name;
@@ -44,19 +45,19 @@ class Table
     }
 
     /**
-     * @return string
+     * @see Part::buildPart()
      */
-    public function build()
+    public function buildPart()
     {
         return $this->spec->quoteTable($this->name, $this->temporary);
     }
 
     /**
-     * @param $nameOrTable string|Table
-     * @param $temporary boolean
+     * @param BuildSpec $spec
+     * @param string|TablePart $table
      */
-    public static function create($spec, $nameOrTable, $temporary = false)
+    public static function create($spec, $table)
     {
-        return (($nameOrTable instanceof Table) ? $nameOrTable : new self($spec, $nameOrTable, $temporary));
+        return (($table instanceof self) ? $table : new self($spec, $table, false));
     }
 }

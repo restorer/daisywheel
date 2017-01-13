@@ -2,68 +2,77 @@
 
 namespace daisywheel\querybuilder;
 
+use daisywheel\querybuilder\ast\Expr;
+use daisywheel\querybuilder\ast\parts\TablePart;
+
 interface BuildSpec
 {
     /**
-     * @param $value any
+     * @param mixed $value
      * @return string
      */
     public function quote($value);
 
     /**
-     * @param $name string
+     * @param string $name
      * @return string
      */
     public function quoteIdentifier($name);
 
     /**
-     * @param $name string
-     * @param $temporary boolean
+     * @param string $name
+     * @param boolean $temporary
      * @return string
      */
     public function quoteTable($name, $temporary);
 
     /**
-     * @param $tableName string
-     * @param $constraintName string
+     * @param string $tableName
+     * @param string $constraintName
      * @return string
      */
     public function quoteConstraint($tableName, $constraintName);
 
     /**
-     * @param $type string
-     * @param $operands daisywheel\querybuilder\ast\Expr[]
+     * @param string $type
+     * @param Expr[] $operands
      * @return string
      */
     public function buildFunctionExpr($type, $operands);
 
-    // buildSelectCommand
+    /**
+     * @param string $startSql
+     * @param string $partsSql
+     * @param OrderByPart[] $orderByList
+     * @param int|null $limit
+     * @param int|null $offset
+     * @return string
+     */
+    public function buildSelectCommand($startSql, $partsSql, $orderByList, $limit, $offset);
+
     // buildInsertCommand
     // buildDeleteCommand
     // buildUpdateCommand
     // buildCreateTableCommand
 
     /**
-     * @param $name string
-     * @param $temporary boolean
+     * @param string $tableSql
+     * @param boolean $temporary
      * @return string
      */
-    public function buildDropTableCommand($name, $temporary);
+    public function buildDropTableCommand($tableSql, $temporary);
 
     /**
-     * @param $name string
-     * @param $temporary boolean
+     * @param string $tableSql
+     * @param string $tableName
      * @return string
      */
-    public function buildTruncateTableCommand($name, $temporary);
-
-    // buildCreateIndexCommand
+    public function buildTruncateTableCommand($tableSql, $tableName);
 
     /**
-     * @param $constraintSql string
-     * @param $tableName string
-     * @param $tableTemporary boolean
+     * @param TablePart $table
+     * @param string $constraintSql
      * @return string
      */
-    public function buildDropIndexCommand($constraintSql, $tableName, $tableTemporary);
+    public function buildDropIndexCommand($table, $constraintSql);
 }
