@@ -48,31 +48,46 @@ interface BuildSpec
      * @param int|null $offset
      * @return string
      */
-    public function buildSelectCommand($startSql, $partsSql, $orderByList, $limit, $offset);
+    public function buildSelectSql($startSql, $partsSql, $orderByList, $limit, $offset);
 
-    // buildInsertCommand
-    // buildDeleteCommand
-    // buildUpdateCommand
+    /**
+     * @param string $tableSql
+     * @param string[] $quotedKeys
+     * @param string[] $quotedColumns
+     * @param array<array<string>> $quotedValues
+     * @return string
+     */
+    public function buildInsertIgnoreCommand($tableSql, $quotedKeys, $quotedColumns, $quotedValues);
+
+    /**
+     * @param string $tableSql
+     * @param string[] $quotedKeys
+     * @param string[] $quotedColumns
+     * @param array<array<string>> $quotedValues
+     * @return string
+     */
+    public function buildInsertReplaceCommand($tableSql, $quotedKeys, $quotedColumns, $quotedValues);
+
     // buildCreateTableCommand
 
     /**
      * @param string $tableSql
      * @param boolean $temporary
-     * @return string
+     * @return string[]
      */
     public function buildDropTableCommand($tableSql, $temporary);
 
     /**
      * @param string $tableSql
      * @param string $tableName
-     * @return string
+     * @return string[]
      */
     public function buildTruncateTableCommand($tableSql, $tableName);
 
     /**
      * @param TablePart $table
      * @param string $constraintSql
-     * @return string
+     * @return string[]
      */
     public function buildDropIndexCommand($table, $constraintSql);
 }

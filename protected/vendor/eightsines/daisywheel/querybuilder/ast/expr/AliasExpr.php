@@ -2,7 +2,6 @@
 
 namespace daisywheel\querybuilder\ast\expr;
 
-use daisywheel\querybuilder\BuildHelper;
 use daisywheel\querybuilder\BuildSpec;
 use daisywheel\querybuilder\ast\Expr;
 

@@ -1,4 +1,3 @@
-daisywheel
-==========
+# daisywheel
 
 Daisywheel CMF

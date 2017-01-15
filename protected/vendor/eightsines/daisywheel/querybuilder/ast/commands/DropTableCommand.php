@@ -35,7 +35,7 @@ class DropTableCommand implements Command
     /**
      * @param string $tableSql
      * @param string $prependSql
-     * @return string
+     * @return string[]
      */
     public static function basicBuild($tableSql, $prependSql)
     {

@@ -7,6 +7,7 @@ use daisywheel\tests\unit\querybuilder\mock\MockBuildSpec;
 
 class BuilderMiscTest extends \PHPUnit_Framework_TestCase
 {
+    /** @var QueryBuilder */
     protected $builder;
 
     public function __construct()

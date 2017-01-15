@@ -3,7 +3,6 @@
 namespace daisywheel\querybuilder\ast\commands;
 
 use daisywheel\querybuilder\BuildException;
-use daisywheel\querybuilder\BuildHelper;
 use daisywheel\querybuilder\BuildSpec;
 use daisywheel\querybuilder\ast\Command;
 use daisywheel\querybuilder\ast\parts\TablePart;
@@ -22,14 +21,18 @@ class CreateIndexCommand implements Command
     /** @var string[] */
     protected $columns;
 
+    /** @var boolean */
+    protected $unique;
+
     /**
      * @param BuildSpec $spec
      * @param TablePart $table
      * @param string $name
-     * @param string|string[] $columns
+     * @param string[] $columns
+     * @param boolean $unique
      * @throws BuildException
      */
-    public function __construct($spec, $table, $name, $columns)
+    public function __construct($spec, $table, $name, $columns, $unique)
     {
         if (empty($columns)) {
             throw new BuildException('At least one column required');
@@ -38,7 +41,8 @@ class CreateIndexCommand implements Command
         $this->spec = $spec;
         $this->table = $table;
         $this->name = $name;
-        $this->columns = BuildHelper::arg($columns);
+        $this->columns = $columns;
+        $this->unique = $unique;
     }
 
     /**
@@ -47,12 +51,14 @@ class CreateIndexCommand implements Command
     public function build()
     {
         return [
-            'CREATE INDEX '
+            'CREATE '
+            . ($this->unique ? 'UNIQUE ' : '')
+            . 'INDEX '
             . $this->spec->quoteConstraint($this->table->getName(), $this->name)
             . ' ON '
             . $this->table->buildPart()
             . ' ('
-            . join(', ', array_map(function ($v) {
+            . join(', ', array_map(/** @return string */ function ($v) {
                 return $this->spec->quoteIdentifier($v);
             }, $this->columns))
             . ')'

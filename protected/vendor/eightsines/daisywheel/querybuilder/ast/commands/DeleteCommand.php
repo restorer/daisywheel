@@ -37,7 +37,9 @@ class DeleteCommand implements Command
      */
     public function build()
     {
-        return "DELETE FROM {$this->table->buildPart()}"
-            . ($this->where === null ? '' : " WHERE {$this->where->buildExpr()}");
+        return [
+            "DELETE FROM {$this->table->buildPart()}"
+            . ($this->where === null ? '' : " WHERE {$this->where->buildExpr()}")
+        ];
     }
 }

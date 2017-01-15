@@ -42,7 +42,7 @@ class DropIndexCommand implements Command
 
     /**
      * @param string $dropSql
-     * @return string
+     * @return string[]
      */
     public static function basicBuild($dropSql)
     {

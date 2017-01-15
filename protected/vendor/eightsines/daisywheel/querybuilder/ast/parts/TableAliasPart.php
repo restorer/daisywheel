@@ -19,7 +19,7 @@ class TableAliasPart implements Part
     /**
      * @param BuildSpec $spec
      * @param TablePart $table
-     * @param string $alias
+     * @param string|null $alias
      */
     public function __construct($spec, $table, $alias)
     {

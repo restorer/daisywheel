@@ -1,0 +1,21 @@
+<psalm
+    stopOnFirstError="false"
+    autoloader="vendor/eightsines/daisywheel/tests/bootstrap.php"
+>
+    <projectFiles>
+        <directory name="vendor/eightsines/daisywheel" />
+    </projectFiles>
+
+    <issueHandlers>
+        <!--
+        <MixedArrayAccess errorLevel="suppress" />
+        <MixedArrayOffset errorLevel="suppress" />
+        <MixedAssignment errorLevel="suppress" />
+        <MixedArgument errorLevel="suppress" />
+        <MixedMethodCall errorLevel="suppress" />
+        <MixedPropertyFetch errorLevel="suppress" />
+        <MixedPropertyAssignment errorLevel="suppress" />
+        <MixedInferredReturnType errorLevel="suppress" />
+        -->
+    </issueHandlers>
+</psalm>

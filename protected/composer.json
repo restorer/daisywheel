@@ -1,0 +1,6 @@
+{
+    "require-dev": {
+        "vimeo/psalm": "dev-master",
+        "phpunit/phpunit": "5.5.*"
+    }
+}

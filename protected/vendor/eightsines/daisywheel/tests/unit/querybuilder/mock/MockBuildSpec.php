@@ -4,6 +4,7 @@ namespace daisywheel\tests\unit\querybuilder\mock;
 
 use daisywheel\querybuilder\BuildSpec;
 use daisywheel\querybuilder\ast\commands\DropIndexCommand;
+use daisywheel\querybuilder\ast\commands\InsertSpecialCommand;
 use daisywheel\querybuilder\ast\commands\DropTableCommand;
 use daisywheel\querybuilder\ast\commands\SelectCommand;
 use daisywheel\querybuilder\ast\commands\TruncateTableCommand;
@@ -69,9 +70,9 @@ class MockBuildSpec implements BuildSpec
     }
 
     /**
-     * @see BuildSpec::buildSelectCommand()
+     * @see BuildSpec::buildSelectSql()
      */
-    public function buildSelectCommand($startSql, $partsSql, $orderSql, $limit, $offset)
+    public function buildSelectSql($startSql, $partsSql, $orderSql, $limit, $offset)
     {
         if ($offset === null) {
             return $startSql
@@ -89,9 +90,53 @@ class MockBuildSpec implements BuildSpec
             . SelectCommand::buildOrderBy($orderSql);
     }
 
-    // buildInsertCommand
-    // buildDeleteCommand
-    // buildUpdateCommand
+    /**
+     * @see BuildSpec::buildInsertIgnoreCommand()
+     */
+    public function buildInsertIgnoreCommand($tableSql, $quotedKeys, $quotedColumns, $quotedValues)
+    {
+        $keysSql = InsertSpecialCommand::buildKeysSql($quotedKeys, $quotedColumns);
+
+        return [
+            "WITH qb_1 {$keysSql} AS ("
+            . InsertSpecialCommand::buildValuesSql($quotedValues)
+            . ") INSERT INTO {$tableSql} {$keysSql} SELECT "
+            . join(', ', array_merge($quotedKeys, $quotedColumns))
+            . " FROM qb_1 WHERE NOT EXISTS (SELECT 1 FROM {$tableSql} WHERE "
+            . join(' AND ', array_map(/** @return string */function ($v) {
+                return "{$v} = qb_1.{$v}";
+            }, $quotedKeys))
+            . ')'
+        ];
+    }
+
+    /**
+     * @see BuildSpec::buildInsertReplaceCommand()
+     */
+    public function buildInsertReplaceCommand($tableSql, $quotedKeys, $quotedColumns, $quotedValues)
+    {
+        $keysSql = InsertSpecialCommand::buildKeysSql($quotedKeys, $quotedColumns);
+
+        return [
+            "WITH qbv_1 {$keysSql} AS ("
+            . InsertSpecialCommand::buildValuesSql($quotedValues)
+            . "), qbu_2 AS (UPDATE {$tableSql} SET "
+            . join(', ', array_map(/** @return string */ function ($v) {
+                return "{$v} = qbv_1.{$v}";
+            }, $quotedColumns))
+            . " FROM qbv_1 WHERE "
+            . join(' AND ', array_map(/** @return string */ function ($v) use ($tableSql) {
+                return "{$tableSql}.{$v} = qbv_1.{$v}";
+            }, $quotedKeys))
+            . " RETURNING {$tableSql}.*) INSERT INTO {$tableSql} {$keysSql} SELECT "
+            . join(', ', array_merge($quotedKeys, $quotedColumns))
+            . " FROM qbv_1 WHERE NOT EXISTS (SELECT 1 FROM qbu_2 WHERE "
+            . join(' AND ', array_map(/** @return string */function ($v) {
+                return "{$v} = qbv_1.{$v}";
+            }, $quotedKeys))
+            . ')'
+        ];
+    }
 
     /*
     public function buildCreateTableCommand($name, $temporary)

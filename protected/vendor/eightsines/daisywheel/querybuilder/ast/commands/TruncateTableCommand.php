@@ -34,7 +34,7 @@ class TruncateTableCommand implements Command
 
     /**
      * @param string $truncateSql
-     * @return string
+     * @return string[]
      */
     public static function basicBuild($truncateSql)
     {

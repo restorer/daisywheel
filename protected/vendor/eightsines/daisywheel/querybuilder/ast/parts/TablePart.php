@@ -37,7 +37,7 @@ class TablePart implements Part
     }
 
     /**
-     * @return string
+     * @return boolean
      */
     public function getTemporary()
     {

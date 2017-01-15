@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit
-	bootstrap="./bootstrap.php"
+	bootstrap="vendor/eightsines/daisywheel/tests/bootstrap.php"
 	backupGlobals="false"
 	backupStaticAttributes="false"
 	colors="true"
@@ -14,7 +14,7 @@
 	<!-- http://www.phpunit.de/manual/current/en/appendixes.configuration.html -->
 	<testsuites>
 		<testsuite name="UnitTest">
-			<directory>./unit</directory>
+			<directory>vendor/eightsines/daisywheel/tests/unit</directory>
 		</testsuite>
 	</testsuites>
 </phpunit>

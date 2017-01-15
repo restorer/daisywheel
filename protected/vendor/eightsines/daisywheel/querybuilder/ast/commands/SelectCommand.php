@@ -216,10 +216,11 @@ class SelectCommand implements Command, Expr
     }
 
     /**
+     * @param string $afterColumnsSql
      * @throws BuildException
      * @return string
      */
-    public function buildSql()
+    public function buildSql($afterColumnsSql = '')
     {
         if (empty($this->columns)) {
             throw new BuildException('At least one column required');
@@ -229,19 +230,20 @@ class SelectCommand implements Command, Expr
             throw new BuildException('Offset without limit is not supported');
         }
 
-        return $this->spec->buildSelectCommand(
+        return $this->spec->buildSelectSql(
             'SELECT ' . ($this->distinct ? 'DISTINCT ' : ''),
-            join(', ', array_map(function ($v) {
+            join(', ', array_map(/** @return string */ function ($v) {
                 return $v->buildExpr();
             }, $this->columns))
-                . (empty($this->fromList) ? '' : (' FROM ' . join(', ', array_map(function ($v) {
+                . $afterColumnsSql
+                . (empty($this->fromList) ? '' : (' FROM ' . join(', ', array_map(/** @return string */ function ($v) {
                     return $v->buildPart();
                 }, $this->fromList))))
-                . (empty($this->joinList) ? '' : (' ' . join(' ', array_map(function ($v) {
+                . (empty($this->joinList) ? '' : (' ' . join(' ', array_map(/** @return string */ function ($v) {
                     return $v->buildPart();
                 }, $this->joinList))))
                 . ($this->where === null ? '' : " WHERE {$this->where->buildExpr()}")
-                . (empty($this->groupByList) ? '' : (' GROUP BY ' . join(', ', array_map(function ($v) {
+                . (empty($this->groupByList) ? '' : (' GROUP BY ' . join(', ', array_map(/** @return string */ function ($v) {
                     return $v->buildExpr();
                 }, $this->groupByList))))
                 . ($this->having === null ? '' : " HAVING {$this->having->buildExpr()}")
