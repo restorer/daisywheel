@@ -5,6 +5,14 @@ namespace daisywheel\tests\unit\querybuilder\mock;
 class MockExtBuildSpec extends MockBuildSpec
 {
     /**
+     * @see MockBuildSpec::buildCreateTableAsSelectCommand()
+     */
+    public function buildCreateTableAsSelectCommand($quotedTable, $temporary, $select)
+    {
+        return [$select->buildSql(" INTO {$quotedTable}")];
+    }
+
+    /**
      * @see MockBuildSpec::buildTruncateTableCommand()
      */
     public function buildTruncateTableCommand($tableSql, $tableName)

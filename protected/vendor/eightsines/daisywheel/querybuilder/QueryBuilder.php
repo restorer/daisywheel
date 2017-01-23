@@ -3,6 +3,7 @@
 namespace daisywheel\querybuilder;
 
 use daisywheel\querybuilder\ast\commands\CreateIndexCommand;
+use daisywheel\querybuilder\ast\commands\CreateTableCommand;
 use daisywheel\querybuilder\ast\commands\DeleteCommand;
 use daisywheel\querybuilder\ast\commands\DropIndexCommand;
 use daisywheel\querybuilder\ast\commands\DropTableCommand;
@@ -17,6 +18,7 @@ use daisywheel\querybuilder\ast\expr\ColumnExpr;
 use daisywheel\querybuilder\ast\expr\FunctionExpr;
 use daisywheel\querybuilder\ast\expr\PlaceholderExpr;
 use daisywheel\querybuilder\ast\expr\ValueExpr;
+use daisywheel\querybuilder\ast\parts\DataTypePart;
 use daisywheel\querybuilder\ast\parts\TablePart;
 
 /**
@@ -140,18 +142,19 @@ class QueryBuilder
 
     /**
      * @param string|TablePart $table
-     * @param ColumnDef[] $columns
+     * @param DataTypePart[] $columns
      * @return CreateTableCommand
      * {@internal MySQL: https://dev.mysql.com/doc/refman/5.7/en/create-table.html}
      * {@internal SQLite: https://www.sqlite.org/lang_createtable.html}
      * {@internal PostgreSQL: https://www.postgresql.org/docs/current/static/sql-createtable.html}
      * {@internal SQL Server: https://msdn.microsoft.com/en-us/library/ms174979.aspx}
      * {@internal Oracle: https://docs.oracle.com/cd/B28359_01/server.111/b28286/statements_7002.htm#SQLRF01402}
+     * {@internal We don't allow multi-column PKs becase SQLite allows AUTOINCREMENT only as part of PRIMARY KEY column}
+     * {@internal We don't allow CHECK becase MySQL ignore them}
      */
-    public function createTable($table, $columns)
+    public function createTable($table, $columns = [])
     {
-        // return new CreateTableCommand();
-        // TODO: asSelect
+        return new CreateTableCommand($this->spec, TablePart::create($this->spec, $table), $columns);
     }
 
     /**
@@ -167,12 +170,12 @@ class QueryBuilder
         alterTable('t1')
             ->renameTo('t2') // mySQL, sqlite
             ->add($builder->col('c1')->varChar(255)->notNull()) // mySQL, sqlite
-            ->addIndex('i1', ['c1', 'c2']) // ??? just use createIndex
-            ->addUniqieIndex('i1', ['c1', 'c2']) // ??? just use createUniqueIndex
+            ->addIndex('i1', ['c1', 'c2'])
+            ->addUniqieIndex('i1', ['c1', 'c2'])
             ->addForeignKey('fk1', ['c1', 'c2'], 't2', ['c1', 'c2'])->onDeleteSetNull()->onUpdateCascade()
             ->alter(column)
             ->drop(column)
-            ->dropContraint(constraint) // ??? just use dropIndex
+            ->dropContraint(constraint)
             ->renameColumn(column)
             ->renameConstraint(constraint)
         */

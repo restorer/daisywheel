@@ -33,12 +33,12 @@ class DropTableCommand implements Command
     }
 
     /**
-     * @param string $tableSql
      * @param string $prependSql
+     * @param string $quotedTable
      * @return string[]
      */
-    public static function basicBuild($tableSql, $prependSql)
+    public static function basicBuild($prependSql, $quotedTable)
     {
-        return ["DROP {$prependSql}TABLE {$tableSql}"];
+        return ["DROP {$prependSql}TABLE {$quotedTable}"];
     }
 }

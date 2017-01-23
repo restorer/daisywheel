@@ -12,11 +12,11 @@ class CreateIndexCommand implements Command
     /** @var BuildSpec */
     protected $spec;
 
-    /** @var string */
-    protected $name;
-
     /** @var TablePart */
     protected $table;
+
+    /** @var string */
+    protected $name;
 
     /** @var string[] */
     protected $columns;
@@ -46,12 +46,11 @@ class CreateIndexCommand implements Command
     }
 
     /**
-     * @see Command::build()
+     * @return string
      */
-    public function build()
+    public function buildSql()
     {
-        return [
-            'CREATE '
+        return 'CREATE '
             . ($this->unique ? 'UNIQUE ' : '')
             . 'INDEX '
             . $this->spec->quoteConstraint($this->table->getName(), $this->name)
@@ -61,7 +60,14 @@ class CreateIndexCommand implements Command
             . join(', ', array_map(/** @return string */ function ($v) {
                 return $this->spec->quoteIdentifier($v);
             }, $this->columns))
-            . ')'
-        ];
+            . ')';
+    }
+
+    /**
+     * @see Command::build()
+     */
+    public function build()
+    {
+        return [$this->buildSql()];
     }
 }

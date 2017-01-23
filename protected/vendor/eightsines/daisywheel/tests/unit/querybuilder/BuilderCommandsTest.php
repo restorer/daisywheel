@@ -239,16 +239,30 @@ class BuilderCommandsTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    public function x_testCreateTable()
+    /**
+     * @covers daisywheel\querybuilder\QueryBuilder::createTable
+     */
+    public function testCreateTable()
     {
         $expected = [
             "CREATE TEMPORARY TABLE " . "[#Test] ("
-            . "[id] INT NOT NULL AUTO_INCREMENT PRIMARY KEY"
-            . ", [id2] BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY"
-            . ", [key] VARCHAR(255) NOT NULL"
-            . ", [name] VARCHAR(255) DEFAULT 'TestDefault'"
-            . ", [fooId] INT"
-            . ")"
+                . "[id] INT NOT NULL IDENTITY(1, 1) PRIMARY KEY"
+                . ", [id2] BIGINT NOT NULL IDENTITY(1, 1) PRIMARY KEY"
+                . ", [key] NVARCHAR(255) NOT NULL"
+                . ", [name] NVARCHAR(255) DEFAULT 'TestDefault'"
+                . ", [fooId] INT"
+                . ", CONSTRAINT [Test_idxKey] UNIQUE ([key])"
+                . ", CONSTRAINT [Test_idxKeyFooId] UNIQUE ([key], [fooId])"
+                . ", CONSTRAINT [Test_fkFooTest] FOREIGN KEY ([fooId]) REFERENCES [Foo] ([id]) ON DELETE CASCADE ON UPDATE RESTRICT"
+                . ", CONSTRAINT [Test_fkFooTest] FOREIGN KEY ([fooId]) REFERENCES [Foo] ([id]) ON DELETE RESTRICT ON UPDATE CASCADE"
+                . ", CONSTRAINT [Test_fkFooTest] FOREIGN KEY ([fooId]) REFERENCES [Foo] ([id]) ON DELETE RESTRICT ON UPDATE SET NULL"
+                . ", CONSTRAINT [Test_fkFooTest] FOREIGN KEY ([fooId]) REFERENCES [Foo] ([id]) ON DELETE CASCADE ON UPDATE RESTRICT"
+                . ", CONSTRAINT [Test_fkFooTest] FOREIGN KEY ([fooId]) REFERENCES [Foo] ([id]) ON DELETE SET NULL ON UPDATE CASCADE"
+                . ", CONSTRAINT [Test_fkFooTest2] FOREIGN KEY ([key], [fooId]) REFERENCES [Foo] ([uid], [id])"
+                . " ON DELETE RESTRICT ON UPDATE RESTRICT"
+                . ") ENGINE=InnoDB, CHARACTER SET = 'utf8', COLLATE = 'utf8_general_ci'",
+            "CREATE INDEX [Test_idxName] ON " . "[#Test] ([name])",
+            "CREATE INDEX [Test_idxKeyName] ON " . "[#Test] ([key], [name])",
         ];
 
         $actual = $this->builder->createTable($this->builder->temp('Test'), [
@@ -258,26 +272,103 @@ class BuilderCommandsTest extends \PHPUnit_Framework_TestCase
                 $this->builder->col('name')->varChar(255)->default('TestDefault'),
                 $this->builder->col('fooId')->int()
             ])
-            ->unique('idxKey', 'key')
-            ->unique('idxKeyFooId', ['key', 'fooId'])
             ->index('idxName', 'name')
             ->index('idxKeyName', ['key', 'name'])
+            ->unique('idxKey', 'key')
+            ->unique('idxKeyFooId', ['key', 'fooId'])
+            ->foreignKey('fkFooTest', 'fooId', 'Foo', 'id')->onDeleteCascade()
+            ->foreignKey('fkFooTest', 'fooId', 'Foo', 'id')->onUpdateCascade()
+            ->foreignKey('fkFooTest', 'fooId', 'Foo', 'id')->onDeleteRestrict()->onUpdateSetNull()
+            ->foreignKey('fkFooTest', 'fooId', 'Foo', 'id')->onDeleteCascade()->onUpdateRestrict()
             ->foreignKey('fkFooTest', 'fooId', 'Foo', 'id')->onDeleteSetNull()->onUpdateCascade()
             ->foreignKey('fkFooTest2', ['key', 'fooId'], 'Foo', ['uid', 'id'])
+            ->build()
         ;
 
         $this->assertEquals($expected, $actual);
 
-        // ----
-
-        // $expected = ["CREATE TABLE [Test] AS SELECT * FROM [Foo]"];
-        $expected = ["SELECT * INTO [Test] FROM [Foo]"];
-
-        $actual = $this->builder->createTable('Test')->asSelect(
-            $this->builder->select($this->builder->col('*')->from('Foo'))
+        $this->assertEquals(
+            ['CREATE TABLE [Test] AS SELECT * FROM [Foo]'],
+            $this->builder->createTable('Test')->asSelect(
+                $this->builder->select($this->builder->col('*'))->from('Foo')
+            )->build()
         );
+    }
 
-        $this->assertEquals($expected, $actual);
+    /**
+     * @covers daisywheel\querybuilder\QueryBuilder::createTable
+     */
+    public function testCreateTableExt()
+    {
+        $builderExt = new QueryBuilder(new MockExtBuildSpec());
+
+        $this->assertEquals(
+            ['SELECT * INTO [Test] FROM [Foo]'],
+            $builderExt->createTable('Test')->asSelect(
+                $builderExt->select($builderExt->col('*'))->from('Foo')
+            )->build()
+        );
+    }
+
+    /**
+     * @covers daisywheel\querybuilder\QueryBuilder::createTable
+     * @expectedException daisywheel\querybuilder\BuildException
+     */
+    public function testCreateTableException1()
+    {
+        $this->builder->createTable('User')->build();
+    }
+
+    /**
+     * @covers daisywheel\querybuilder\QueryBuilder::createTable
+     * @expectedException daisywheel\querybuilder\BuildException
+     */
+    public function testCreateTableException2()
+    {
+        $this->builder->createTable('User', [
+            $this->builder->col('id')->primaryKey(),
+        ])->asSelect(
+            $this->builder->select($this->builder->col('*'))->from('Foo')
+        )->build();
+    }
+
+    /**
+     * @covers daisywheel\querybuilder\QueryBuilder::createTable
+     * @expectedException daisywheel\querybuilder\BuildException
+     */
+    public function testCreateTableException3()
+    {
+        $this->builder->createTable('User')
+            ->index('idxKey', 'key')
+            ->asSelect(
+                $this->builder->select($this->builder->col('*'))->from('Foo')
+            )->build();
+    }
+
+    /**
+     * @covers daisywheel\querybuilder\QueryBuilder::createTable
+     * @expectedException daisywheel\querybuilder\BuildException
+     */
+    public function testCreateTableException4()
+    {
+        $this->builder->createTable('User')
+            ->index('idxKey', 'key')
+            ->asSelect(
+                $this->builder->select($this->builder->col('*'))->from('Foo')
+            )->build();
+    }
+
+    /**
+     * @covers daisywheel\querybuilder\QueryBuilder::createTable
+     * @expectedException daisywheel\querybuilder\BuildException
+     */
+    public function testCreateTableException5()
+    {
+        $this->builder->createTable('User')
+            ->foreignKey('fkFooTest', 'fooId', 'Foo', 'id')->onDeleteCascade()
+            ->asSelect(
+                $this->builder->select($this->builder->col('*'))->from('Foo')
+            )->build();
     }
 
     public function x_testAlterTable()
@@ -323,6 +414,11 @@ class BuilderCommandsTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(
             ['CREATE INDEX [User_name] ON [User] ([name])'],
             $this->builder->createIndex('User', 'name', 'name')->build()
+        );
+
+        $this->assertEquals(
+            ['CREATE INDEX [User_name] ON ' . '[#User] ([name])'],
+            $this->builder->createIndex($this->builder->temp('User'), 'name', 'name')->build()
         );
 
         $this->assertEquals(

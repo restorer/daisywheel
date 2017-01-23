@@ -3,6 +3,8 @@
 namespace daisywheel\querybuilder;
 
 use daisywheel\querybuilder\ast\Expr;
+use daisywheel\querybuilder\ast\commands\SelectCommand;
+use daisywheel\querybuilder\ast\parts\OrderByPart;
 use daisywheel\querybuilder\ast\parts\TablePart;
 
 interface BuildSpec
@@ -51,38 +53,71 @@ interface BuildSpec
     public function buildSelectSql($startSql, $partsSql, $orderByList, $limit, $offset);
 
     /**
-     * @param string $tableSql
+     * @param string $quotedTable
      * @param string[] $quotedKeys
      * @param string[] $quotedColumns
      * @param array<array<string>> $quotedValues
      * @return string
      */
-    public function buildInsertIgnoreCommand($tableSql, $quotedKeys, $quotedColumns, $quotedValues);
+    public function buildInsertIgnoreCommand($quotedTable, $quotedKeys, $quotedColumns, $quotedValues);
 
     /**
-     * @param string $tableSql
+     * @param string $quotedTable
      * @param string[] $quotedKeys
      * @param string[] $quotedColumns
      * @param array<array<string>> $quotedValues
      * @return string
      */
-    public function buildInsertReplaceCommand($tableSql, $quotedKeys, $quotedColumns, $quotedValues);
-
-    // buildCreateTableCommand
+    public function buildInsertReplaceCommand($quotedTable, $quotedKeys, $quotedColumns, $quotedValues);
 
     /**
-     * @param string $tableSql
+     * @param string $quotedTable
+     * @param boolean $temporary
+     * @param string $partsSql
+     * @param CreateIndexCommand[] $indexList
+     * @return string[]
+     */
+    public function buildCreateTableCommand($quotedTable, $temporary, $partsSql, $indexList);
+
+    /**
+     * @param string $quotedTable
+     * @param boolean $temporary
+     * @param SelectCommand $select
+     * @return string[]
+     */
+    public function buildCreateTableAsSelectCommand($quotedTable, $temporary, $select);
+
+    /**
+     * @param string $quotedName
+     * @param string $type
+     * @param int[] $options
+     * @param boolean $isNotNull
+     * @param string|null $quotedDefaultValue
+     * @return string
+     */
+    public function buildDataTypePart($quotedName, $type, $options, $isNotNull, $quotedDefaultValue);
+
+    /**
+     * @param string $startSql
+     * @param string $onDeleteOption
+     * @param string $onUpdateOption
+     * @return string
+     */
+    public function buildCreateForeignKeyPart($startSql, $onDeleteOption, $onUpdateOption);
+
+    /**
+     * @param string $quotedTable
      * @param boolean $temporary
      * @return string[]
      */
-    public function buildDropTableCommand($tableSql, $temporary);
+    public function buildDropTableCommand($quotedTable, $temporary);
 
     /**
-     * @param string $tableSql
+     * @param string $quotedTable
      * @param string $tableName
      * @return string[]
      */
-    public function buildTruncateTableCommand($tableSql, $tableName);
+    public function buildTruncateTableCommand($quotedTable, $tableName);
 
     /**
      * @param TablePart $table
