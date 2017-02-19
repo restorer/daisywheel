@@ -2,11 +2,11 @@
 
 namespace daisywheel\querybuilder\ast\commands;
 
+use daisywheel\querybuilder\ast\Command;
+use daisywheel\querybuilder\ast\parts\TablePart;
 use daisywheel\querybuilder\BuildException;
 use daisywheel\querybuilder\BuildHelper;
 use daisywheel\querybuilder\BuildSpec;
-use daisywheel\querybuilder\ast\Command;
-use daisywheel\querybuilder\ast\parts\TablePart;
 
 class InsertCommand implements Command
 {
@@ -23,12 +23,14 @@ class InsertCommand implements Command
     protected $values = [];
 
     /** @var SelectCommand|null */
-    protected $select = null;
+    protected $select;
 
     /**
      * @param BuildSpec $spec
      * @param TablePart $table
      * @param string[] $columns
+     *
+     * @throws BuildException
      */
     public function __construct($spec, $table, $columns)
     {
@@ -42,11 +44,14 @@ class InsertCommand implements Command
     }
 
     /**
-     * @param Expr[]|array<array<Expr>> $valuesOrList
+     * @param Expr []|array<array<Expr>> $valuesOrList
+     *
      * @return self
+     * @throws BuildException
      */
     public function values($valuesOrList)
     {
+        /** @noinspection SuspiciousAssignmentsInspection */
         $valuesOrList = BuildHelper::args(func_get_args());
 
         if (empty($valuesOrList)) {
@@ -59,7 +64,13 @@ class InsertCommand implements Command
 
         foreach ($valuesOrList as $item) {
             if (count($item) !== count($this->columns)) {
-                throw new BuildException('Values count (' . count($item) . ') must be the same as columns count (' . count($this->columns) . ')');
+                throw new BuildException(
+                    'Values count ('
+                    . count($item)
+                    . ') must be the same as columns count ('
+                    . count($this->columns)
+                    . ')'
+                );
             }
 
             $this->values[] = $item;
@@ -70,6 +81,7 @@ class InsertCommand implements Command
 
     /**
      * @param SelectCommand $select
+     *
      * @return self
      */
     public function select($select)
@@ -80,6 +92,7 @@ class InsertCommand implements Command
 
     /**
      * @see Command::build()
+     * @throws BuildException
      */
     public function build()
     {
@@ -89,18 +102,40 @@ class InsertCommand implements Command
 
         return [
             "INSERT INTO {$this->table->buildPart()} ("
-            . join(', ', array_map(/** @return string */ function ($v) {
-                return $this->spec->quoteIdentifier($v);
-            }, $this->columns))
+            . implode(
+                ', ',
+                array_map(
+                    /** @return string */
+                    function ($v) {
+                        return $this->spec->quoteIdentifier($v);
+                    },
+                    $this->columns
+                )
+            )
             . ')'
             . (empty($this->values)
                 ? ''
                 : (
-                    ' VALUES ' . join(', ', array_map(/** @return string */ function ($items) {
-                        return '(' . join(', ', array_map(/** @return string */ function ($v) {
-                            return $v->buildExpr();
-                        }, $items)) . ')';
-                    }, $this->values))
+                    ' VALUES ' . implode(
+                        ', ',
+                        array_map(
+                            /** @return string */
+                            function ($items) {
+                                return '(' . implode(
+                                    ', ',
+                                    array_map(
+                                        /** @return string */
+                                        function ($v) {
+                                            /** @var \daisywheel\querybuilder\ast\Expr $v */
+                                            return $v->buildExpr();
+                                        },
+                                        $items
+                                    )
+                                ) . ')';
+                            },
+                            $this->values
+                        )
+                    )
                 )
             )
             . ($this->select === null

@@ -3,6 +3,8 @@
 namespace daisywheel\querybuilder\ast\parts;
 
 use daisywheel\querybuilder\ast\Part;
+use daisywheel\querybuilder\BuildException;
+use daisywheel\querybuilder\BuildSpec;
 
 class UniqueConstraintPart implements Part
 {
@@ -23,6 +25,7 @@ class UniqueConstraintPart implements Part
      * @param TablePart $table
      * @param string $name
      * @param string[] $columns
+     *
      * @throws BuildException
      */
     public function __construct($spec, $table, $name, $columns)
@@ -43,9 +46,16 @@ class UniqueConstraintPart implements Part
     public function buildPart()
     {
         return "CONSTRAINT {$this->spec->quoteConstraint($this->table->getName(), $this->name)} UNIQUE ("
-            . join(', ', array_map(/** @return string */ function ($v) {
-                return $this->spec->quoteIdentifier($v);
-            }, $this->columns))
+            . implode(
+                ', ',
+                array_map(
+                    /** @return string */
+                    function ($v) {
+                        return $this->spec->quoteIdentifier($v);
+                    },
+                    $this->columns
+                )
+            )
             . ')';
     }
 }

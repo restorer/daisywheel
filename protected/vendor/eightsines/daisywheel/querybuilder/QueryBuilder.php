@@ -2,16 +2,16 @@
 
 namespace daisywheel\querybuilder;
 
-use daisywheel\querybuilder\ast\commands\CreateIndexCommand;
+use daisywheel\querybuilder\ast\AlterTableSelector;
 use daisywheel\querybuilder\ast\commands\CreateTableCommand;
 use daisywheel\querybuilder\ast\commands\DeleteCommand;
-use daisywheel\querybuilder\ast\commands\DropIndexCommand;
 use daisywheel\querybuilder\ast\commands\DropTableCommand;
 use daisywheel\querybuilder\ast\commands\InsertCommand;
 use daisywheel\querybuilder\ast\commands\InsertSpecialCommand;
 use daisywheel\querybuilder\ast\commands\SelectCommand;
 use daisywheel\querybuilder\ast\commands\TruncateTableCommand;
 use daisywheel\querybuilder\ast\commands\UpdateCommand;
+use daisywheel\querybuilder\ast\Expr;
 use daisywheel\querybuilder\ast\expr\AliasExpr;
 use daisywheel\querybuilder\ast\expr\BasicExpr;
 use daisywheel\querybuilder\ast\expr\ColumnExpr;
@@ -19,12 +19,13 @@ use daisywheel\querybuilder\ast\expr\FunctionExpr;
 use daisywheel\querybuilder\ast\expr\PlaceholderExpr;
 use daisywheel\querybuilder\ast\expr\ValueExpr;
 use daisywheel\querybuilder\ast\parts\DataTypePart;
+use daisywheel\querybuilder\ast\parts\IdentifierPart;
 use daisywheel\querybuilder\ast\parts\TablePart;
 
 /**
  * @method AliasExpr as(Expr $expr, string $alias)
- * @method BasicExpr and(Expr|Expr[] $a, Expr|null $b)
- * @method BasicExpr or(Expr|Expr[] $a, Expr|null $b)
+ * @method BasicExpr and(Expr|Expr[] ...$a)
+ * @method BasicExpr or(Expr|Expr[] ...$a)
  */
 class QueryBuilder
 {
@@ -41,7 +42,11 @@ class QueryBuilder
 
     /**
      * @param Expr[] $columns
+     *
      * @return SelectCommand
+     * @throws BuildException
+     * @psalm-suppress TypeCoercion
+     *
      * {@internal MySQL: https://dev.mysql.com/doc/refman/5.7/en/select.html}
      * {@internal SQLite: https://www.sqlite.org/lang_select.html}
      * {@internal PostgreSQL: https://www.postgresql.org/docs/current/static/sql-select.html}
@@ -50,13 +55,18 @@ class QueryBuilder
      */
     public function select($columns = null)
     {
+        /** @noinspection PhpParamsInspection */
         return new SelectCommand($this->spec, BuildHelper::args(func_get_args()));
     }
 
     /**
      * @param string|TablePart $table
      * @param string|string[] $columns
+     *
      * @return InsertCommand
+     * @throws BuildException
+     * @psalm-suppress TypeCoercion
+     *
      * {@internal MySQL: https://dev.mysql.com/doc/refman/5.7/en/insert.html}
      * {@internal SQLite: https://www.sqlite.org/lang_insert.html}
      * {@internal PostgreSQL: https://www.postgresql.org/docs/current/static/sql-insert.html}
@@ -65,6 +75,7 @@ class QueryBuilder
      */
     public function insertInto($table, $columns)
     {
+        /** @noinspection PhpParamsInspection */
         return new InsertCommand($this->spec, TablePart::create($this->spec, $table), BuildHelper::arg($columns));
     }
 
@@ -72,7 +83,11 @@ class QueryBuilder
      * @param string|TablePart $table
      * @param string|string[] $keys
      * @param string|string[] $columns
-     * @return InsertCommand
+     *
+     * @return InsertSpecialCommand
+     * @throws BuildException
+     * @psalm-suppress TypeCoercion
+     *
      * {@internal MySQL: https://dev.mysql.com/doc/refman/5.7/en/insert.html}
      * {@internal SQLite: https://www.sqlite.org/lang_insert.html}
      * {@internal PostgreSQL: https://www.postgresql.org/docs/current/static/sql-insert.html}
@@ -81,6 +96,7 @@ class QueryBuilder
      */
     public function insertOrIgnore($table, $keys, $columns)
     {
+        /** @noinspection PhpParamsInspection */
         return new InsertSpecialCommand(
             $this->spec,
             TablePart::create($this->spec, $table),
@@ -94,7 +110,11 @@ class QueryBuilder
      * @param string|TablePart $table
      * @param string|string[] $keys
      * @param string|string[] $columns
-     * @return InsertCommand
+     *
+     * @return InsertSpecialCommand
+     * @throws BuildException
+     * @psalm-suppress TypeCoercion
+     *
      * {@internal MySQL: https://dev.mysql.com/doc/refman/5.7/en/insert.html}
      * {@internal SQLite: https://www.sqlite.org/lang_insert.html}
      * {@internal PostgreSQL: https://www.postgresql.org/docs/current/static/sql-insert.html}
@@ -103,6 +123,7 @@ class QueryBuilder
      */
     public function insertOrReplace($table, $keys, $columns)
     {
+        /** @noinspection PhpParamsInspection */
         return new InsertSpecialCommand(
             $this->spec,
             TablePart::create($this->spec, $table),
@@ -114,7 +135,9 @@ class QueryBuilder
 
     /**
      * @param string|TablePart $table
+     *
      * @return UpdateCommand
+     *
      * {@internal MySQL: https://dev.mysql.com/doc/refman/5.7/en/update.html}
      * {@internal SQLite: https://www.sqlite.org/lang_update.html}
      * {@internal PostgreSQL: https://www.postgresql.org/docs/current/static/sql-update.html}
@@ -128,7 +151,9 @@ class QueryBuilder
 
     /**
      * @param string|TablePart $table
+     *
      * @return DeleteCommand
+     *
      * {@internal MySQL: https://dev.mysql.com/doc/refman/5.7/en/delete.html}
      * {@internal SQLite: https://www.sqlite.org/lang_delete.html}
      * {@internal PostgreSQL: https://www.postgresql.org/docs/current/static/sql-delete.html}
@@ -143,47 +168,55 @@ class QueryBuilder
     /**
      * @param string|TablePart $table
      * @param DataTypePart[] $columns
+     *
      * @return CreateTableCommand
+     *
      * {@internal MySQL: https://dev.mysql.com/doc/refman/5.7/en/create-table.html}
      * {@internal SQLite: https://www.sqlite.org/lang_createtable.html}
      * {@internal PostgreSQL: https://www.postgresql.org/docs/current/static/sql-createtable.html}
      * {@internal SQL Server: https://msdn.microsoft.com/en-us/library/ms174979.aspx}
      * {@internal Oracle: https://docs.oracle.com/cd/B28359_01/server.111/b28286/statements_7002.htm#SQLRF01402}
      * {@internal We don't allow multi-column PKs becase SQLite allows AUTOINCREMENT only as part of PRIMARY KEY column}
-     * {@internal We don't allow CHECK becase MySQL ignore them}
+     * {@internal We don't allow CHECK because MySQL ignore them}
      */
-    public function createTable($table, $columns = [])
+    public function createTable($table, array $columns = [])
     {
         return new CreateTableCommand($this->spec, TablePart::create($this->spec, $table), $columns);
     }
 
     /**
+     * @param string|TablePart $table
+     *
+     * @return AlterTableSelector
+     *
      * {@internal MySQL: https://dev.mysql.com/doc/refman/5.7/en/alter-table.html}
      * {@internal SQLite: https://www.sqlite.org/lang_altertable.html}
      * {@internal PostgreSQL: https://www.postgresql.org/docs/current/static/sql-altertable.html}
      * {@internal SQL Server: https://msdn.microsoft.com/en-US/library/ms190273.aspx}
      * {@internal Oracle: https://docs.oracle.com/cd/B28359_01/server.111/b28286/statements_3001.htm#SQLRF01001}
+     *
+     * {@internal MySQL: https://dev.mysql.com/doc/refman/5.7/en/create-index.html}
+     * {@internal SQLite: https://www.sqlite.org/lang_createindex.html}
+     * {@internal PostgreSQL: https://www.postgresql.org/docs/current/static/sql-createindex.html}
+     * {@internal SQL Server: https://msdn.microsoft.com/en-us/library/ms188783.aspx}
+     * {@internal Oracle: https://docs.oracle.com/cd/B28359_01/server.111/b28286/statements_5011.htm#SQLRF01209}
+     *
+     * {@internal MySQL: https://dev.mysql.com/doc/refman/5.7/en/drop-index.html}
+     * {@internal SQLite: https://www.sqlite.org/lang_dropindex.html}
+     * {@internal PostgreSQL: https://www.postgresql.org/docs/current/static/sql-dropindex.html}
+     * {@internal SQL Server: https://msdn.microsoft.com/en-us/library/ms176118.aspx}
+     * {@internal Oracle: https://docs.oracle.com/cd/B28359_01/server.111/b28286/statements_8016.htm#SQLRF01510}
      */
-    public function alterTable()
+    public function alterTable($table)
     {
-        /*
-        alterTable('t1')
-            ->renameTo('t2') // mySQL, sqlite
-            ->add($builder->col('c1')->varChar(255)->notNull()) // mySQL, sqlite
-            ->addIndex('i1', ['c1', 'c2'])
-            ->addUniqieIndex('i1', ['c1', 'c2'])
-            ->addForeignKey('fk1', ['c1', 'c2'], 't2', ['c1', 'c2'])->onDeleteSetNull()->onUpdateCascade()
-            ->alter(column)
-            ->drop(column)
-            ->dropContraint(constraint)
-            ->renameColumn(column)
-            ->renameConstraint(constraint)
-        */
+        return new AlterTableSelector($this->spec, TablePart::create($this->spec, $table));
     }
 
     /**
      * @param string|TablePart $table
+     *
      * @return DropTableCommand
+     *
      * {@internal MySQL: https://dev.mysql.com/doc/refman/5.7/en/drop-table.html}
      * {@internal SQLite: https://www.sqlite.org/lang_droptable.html}
      * {@internal PostgreSQL: https://www.postgresql.org/docs/current/static/sql-droptable.html}
@@ -197,7 +230,9 @@ class QueryBuilder
 
     /**
      * @param string|TablePart $table
+     *
      * @return TruncateTableCommand
+     *
      * {@internal MySQL: https://dev.mysql.com/doc/refman/5.7/en/truncate-table.html}
      * {@internal SQLite: -}
      * {@internal PostgreSQL: https://www.postgresql.org/docs/current/static/sql-truncate.html}
@@ -209,60 +244,15 @@ class QueryBuilder
         return new TruncateTableCommand($this->spec, TablePart::create($this->spec, $table));
     }
 
-    /**
-     * @param string|TablePart $table
-     * @param string $name
-     * @param string|string[] $columns
-     * @return CreateIndexCommand
-     * {@internal MySQL: https://dev.mysql.com/doc/refman/5.7/en/create-index.html}
-     * {@internal SQLite: https://www.sqlite.org/lang_createindex.html}
-     * {@internal PostgreSQL: https://www.postgresql.org/docs/current/static/sql-createindex.html}
-     * {@internal SQL Server: https://msdn.microsoft.com/en-us/library/ms188783.aspx}
-     * {@internal Oracle: https://docs.oracle.com/cd/B28359_01/server.111/b28286/statements_5011.htm#SQLRF01209}
-     */
-    public function createIndex($table, $name, $columns)
-    {
-        return new CreateIndexCommand($this->spec, TablePart::create($this->spec, $table), $name, BuildHelper::arg($columns), false);
-    }
-
-    /**
-     * @param string|TablePart $table
-     * @param string $name
-     * @param string|string[] $columns
-     * @return CreateIndexCommand
-     * {@internal MySQL: https://dev.mysql.com/doc/refman/5.7/en/create-index.html}
-     * {@internal SQLite: https://www.sqlite.org/lang_createindex.html}
-     * {@internal PostgreSQL: https://www.postgresql.org/docs/current/static/sql-createindex.html}
-     * {@internal SQL Server: https://msdn.microsoft.com/en-us/library/ms188783.aspx}
-     * {@internal Oracle: https://docs.oracle.com/cd/B28359_01/server.111/b28286/statements_5011.htm#SQLRF01209}
-     */
-    public function createUniqueIndex($table, $name, $columns)
-    {
-        return new CreateIndexCommand($this->spec, TablePart::create($this->spec, $table), $name, BuildHelper::arg($columns), true);
-    }
-
-    /**
-     * @param string|TablePart $table
-     * @param string $name
-     * @return DropIndexCommand
-     * {@internal MySQL: https://dev.mysql.com/doc/refman/5.7/en/drop-index.html}
-     * {@internal SQLite: https://www.sqlite.org/lang_dropindex.html}
-     * {@internal PostgreSQL: https://www.postgresql.org/docs/current/static/sql-dropindex.html}
-     * {@internal SQL Server: https://msdn.microsoft.com/en-us/library/ms176118.aspx}
-     * {@internal Oracle: https://docs.oracle.com/cd/B28359_01/server.111/b28286/statements_8016.htm#SQLRF01510}
-     */
-    public function dropIndex($table, $name)
-    {
-        return new DropIndexCommand($this->spec, TablePart::create($this->spec, $table), $name);
-    }
-
     //
     // Basic
     //
 
     /**
      * @param mixed $value
+     *
      * @return ValueExpr
+     * @throws BuildException
      */
     public function val($value)
     {
@@ -271,7 +261,9 @@ class QueryBuilder
 
     /**
      * @param string $name
+     *
      * @return PlaceholderExpr
+     * @throws BuildException
      */
     public function param($name)
     {
@@ -279,22 +271,27 @@ class QueryBuilder
     }
 
     /**
-     * @param string|TablePart $nameOrTable
+     * @param string|TablePart $nameOrAlias
      * @param string|null $name
+     *
      * @return ColumnExpr
+     * @psalm-suppress InvalidArgument
      */
-    public function col($nameOrTable, $name = null)
+    public function col($nameOrAlias, $name = null)
     {
         if ($name === null) {
-            return new ColumnExpr($this->spec, $nameOrTable);
+            return new ColumnExpr($this->spec, $nameOrAlias);
+        } elseif ($nameOrAlias instanceof TablePart) {
+            return new ColumnExpr($this->spec, $name, $nameOrAlias);
         } else {
-            return new ColumnExpr($this->spec, $name, TablePart::create($this->spec, $nameOrTable));
+            return new ColumnExpr($this->spec, $name, new IdentifierPart($this->spec, $nameOrAlias));
         }
     }
 
     /**
      * @param Expr $expr
      * @param string $alias
+     *
      * @return AliasExpr
      */
     public function as_($expr, $alias)
@@ -304,6 +301,17 @@ class QueryBuilder
 
     /**
      * @param string $name
+     *
+     * @return TablePart
+     */
+    public function tab($name)
+    {
+        return new TablePart($this->spec, $name, false);
+    }
+
+    /**
+     * @param string $name
+     *
      * @return TablePart
      */
     public function temp($name)
@@ -316,29 +324,37 @@ class QueryBuilder
     //
 
     /**
-     * @param Expr|Expr[] $a
-     * @param Expr|null $b
+     * @param Expr,...|Expr[] $a
+     *
      * @return BasicExpr
+     * @throws BuildException
+     * @psalm-suppress TypeCoercion
      */
-    public function and_($a, $b = null)
+    public function and_($a)
     {
+        /** @noinspection PhpParamsInspection */
         return BasicExpr::createMulti('AND', BuildHelper::args(func_get_args()));
     }
 
     /**
-     * @param Expr|Expr[] $a
-     * @param Expr|null $b
+     * @param Expr,...|Expr[] $a
+     *
      * @return BasicExpr
+     * @throws BuildException
+     * @psalm-suppress TypeCoercion
      */
-    public function or_($a, $b = null)
+    public function or_($a)
     {
+        /** @noinspection PhpParamsInspection */
         return BasicExpr::createMulti('OR', BuildHelper::args(func_get_args()));
     }
 
     /**
      * @param Expr $a
      * @param Expr $b
+     *
      * @return BasicExpr
+     * @throws BuildException
      */
     public function eq($a, $b)
     {
@@ -348,7 +364,9 @@ class QueryBuilder
     /**
      * @param Expr $a
      * @param Expr $b
+     *
      * @return BasicExpr
+     * @throws BuildException
      */
     public function neq($a, $b)
     {
@@ -358,7 +376,9 @@ class QueryBuilder
     /**
      * @param Expr $a
      * @param Expr $b
+     *
      * @return BasicExpr
+     * @throws BuildException
      */
     public function gt($a, $b)
     {
@@ -368,7 +388,9 @@ class QueryBuilder
     /**
      * @param Expr $a
      * @param Expr $b
+     *
      * @return BasicExpr
+     * @throws BuildException
      */
     public function gte($a, $b)
     {
@@ -378,7 +400,9 @@ class QueryBuilder
     /**
      * @param Expr $a
      * @param Expr $b
+     *
      * @return BasicExpr
+     * @throws BuildException
      */
     public function lt($a, $b)
     {
@@ -388,7 +412,9 @@ class QueryBuilder
     /**
      * @param Expr $a
      * @param Expr $b
+     *
      * @return BasicExpr
+     * @throws BuildException
      */
     public function lte($a, $b)
     {
@@ -398,7 +424,9 @@ class QueryBuilder
     /**
      * @param Expr $a
      * @param Expr[]|PlaceholderExpr|SelectCommand $b
+     *
      * @return BasicExpr
+     * @throws BuildException
      */
     public function in($a, $b)
     {
@@ -408,7 +436,9 @@ class QueryBuilder
     /**
      * @param Expr $a
      * @param Expr[]|PlaceholderExpr|SelectCommand $b
+     *
      * @return BasicExpr
+     * @throws BuildException
      */
     public function notIn($a, $b)
     {
@@ -417,7 +447,9 @@ class QueryBuilder
 
     /**
      * @param Expr $a
+     *
      * @return BasicExpr
+     * @throws BuildException
      */
     public function isNull($a)
     {
@@ -426,7 +458,9 @@ class QueryBuilder
 
     /**
      * @param Expr $a
+     *
      * @return BasicExpr
+     * @throws BuildException
      */
     public function isNotNull($a)
     {
@@ -434,48 +468,62 @@ class QueryBuilder
     }
 
     /**
-     * @param Expr|Expr[] $a
-     * @param Expr|null $b
+     * @param Expr,...|Expr[] $a
+     *
      * @return BasicExpr
+     * @throws BuildException
+     * @psalm-suppress TypeCoercion
      */
-    public function add($a, $b = null)
+    public function add($a)
     {
+        /** @noinspection PhpParamsInspection */
         return BasicExpr::createMulti('+', BuildHelper::args(func_get_args()));
     }
 
     /**
-     * @param Expr|Expr[] $a
-     * @param Expr|null $b
+     * @param Expr,...|Expr[] $a
+     *
      * @return BasicExpr
+     * @throws BuildException
+     * @psalm-suppress TypeCoercion
      */
-    public function sub($a, $b = null)
+    public function sub($a)
     {
+        /** @noinspection PhpParamsInspection */
         return BasicExpr::createMulti('-', BuildHelper::args(func_get_args()));
     }
 
     /**
-     * @param Expr|Expr[] $a
-     * @param Expr|null $b
+     * @param Expr,...|Expr[] $a
+     *
      * @return BasicExpr
+     * @throws BuildException
+     * @psalm-suppress TypeCoercion
      */
-    public function mul($a, $b = null)
+    public function mul($a)
     {
+        /** @noinspection PhpParamsInspection */
         return BasicExpr::createMulti('*', BuildHelper::args(func_get_args()));
     }
 
     /**
-     * @param Expr|Expr[] $a
-     * @param Expr|null $b
+     * @param Expr,...|Expr[] $a
+     *
      * @return BasicExpr
+     * @throws BuildException
+     * @psalm-suppress TypeCoercion
      */
-    public function div($a, $b = null)
+    public function div($a)
     {
+        /** @noinspection PhpParamsInspection */
         return BasicExpr::createMulti('/', BuildHelper::args(func_get_args()));
     }
 
     /**
      * @param Expr $a
+     *
      * @return BasicExpr
+     * @throws BuildException
      */
     public function neg($a)
     {
@@ -484,7 +532,9 @@ class QueryBuilder
 
     /**
      * @param Expr $a
+     *
      * @return BasicExpr
+     * @throws BuildException
      */
     public function not($a)
     {
@@ -494,7 +544,9 @@ class QueryBuilder
     /**
      * @param Expr $a
      * @param Expr $b
+     *
      * @return BasicExpr
+     * @throws BuildException
      */
     public function like($a, $b)
     {
@@ -505,7 +557,9 @@ class QueryBuilder
      * @param Expr $a
      * @param Expr $b
      * @param Expr $c
+     *
      * @return BasicExpr
+     * @throws BuildException
      */
     public function between($a, $b, $c)
     {
@@ -518,7 +572,9 @@ class QueryBuilder
 
     /**
      * @param Expr $a
+     *
      * @return FunctionExpr
+     * @throws BuildException
      */
     public function avg($a)
     {
@@ -527,7 +583,9 @@ class QueryBuilder
 
     /**
      * @param Expr $a
+     *
      * @return FunctionExpr
+     * @throws BuildException
      */
     public function count($a)
     {
@@ -536,7 +594,9 @@ class QueryBuilder
 
     /**
      * @param Expr $a
+     *
      * @return FunctionExpr
+     * @throws BuildException
      */
     public function max($a)
     {
@@ -545,7 +605,9 @@ class QueryBuilder
 
     /**
      * @param Expr $a
+     *
      * @return FunctionExpr
+     * @throws BuildException
      */
     public function min($a)
     {
@@ -554,7 +616,9 @@ class QueryBuilder
 
     /**
      * @param Expr $a
+     *
      * @return FunctionExpr
+     * @throws BuildException
      */
     public function sum($a)
     {
@@ -562,18 +626,23 @@ class QueryBuilder
     }
 
     /**
-     * @param Expr|Expr[] $a
-     * @param Expr|null $b
+     * @param Expr,...|Expr[] $a
+     *
      * @return FunctionExpr
+     * @throws BuildException
+     * @psalm-suppress TypeCoercion
      */
-    public function coalesce($a, $b = null)
+    public function coalesce($a)
     {
+        /** @noinspection PhpParamsInspection */
         return new FunctionExpr($this->spec, FunctionExpr::TYPE_COALESCE, BuildHelper::args(func_get_args()));
     }
 
     /**
      * @param Expr $a
+     *
      * @return FunctionExpr
+     * @throws BuildException
      */
     public function abs($a)
     {
@@ -582,7 +651,9 @@ class QueryBuilder
 
     /**
      * @param Expr $a
+     *
      * @return FunctionExpr
+     * @throws BuildException
      */
     public function round($a)
     {
@@ -590,18 +661,23 @@ class QueryBuilder
     }
 
     /**
-     * @param Expr|Expr[] $a
-     * @param Expr|null $b
+     * @param Expr,...|Expr[] $a
+     *
      * @return FunctionExpr
+     * @throws BuildException
+     * @psalm-suppress TypeCoercion
      */
-    public function concat($a, $b = null)
+    public function concat($a)
     {
+        /** @noinspection PhpParamsInspection */
         return new FunctionExpr($this->spec, FunctionExpr::TYPE_CONCAT, BuildHelper::args(func_get_args()));
     }
 
     /**
      * @param Expr $a
+     *
      * @return FunctionExpr
+     * @throws BuildException
      */
     public function length($a)
     {
@@ -610,7 +686,9 @@ class QueryBuilder
 
     /**
      * @param Expr $a
+     *
      * @return FunctionExpr
+     * @throws BuildException
      */
     public function lower($a)
     {
@@ -619,7 +697,9 @@ class QueryBuilder
 
     /**
      * @param Expr $a
+     *
      * @return FunctionExpr
+     * @throws BuildException
      */
     public function ltrim($a)
     {
@@ -628,7 +708,9 @@ class QueryBuilder
 
     /**
      * @param Expr $a
+     *
      * @return FunctionExpr
+     * @throws BuildException
      */
     public function rtrim($a)
     {
@@ -639,7 +721,9 @@ class QueryBuilder
      * @param Expr $a
      * @param Expr $b
      * @param Expr|null $c
+     *
      * @return FunctionExpr
+     * @throws BuildException
      */
     public function substr($a, $b, $c = null)
     {
@@ -652,7 +736,9 @@ class QueryBuilder
 
     /**
      * @param Expr $a
+     *
      * @return FunctionExpr
+     * @throws BuildException
      */
     public function trim($a)
     {
@@ -661,7 +747,9 @@ class QueryBuilder
 
     /**
      * @param Expr $a
+     *
      * @return FunctionExpr
+     * @throws BuildException
      */
     public function upper($a)
     {
@@ -675,6 +763,7 @@ class QueryBuilder
     /**
      * @param string $name
      * @param mixed $arguments
+     *
      * @throws BuildException
      * @return mixed
      */

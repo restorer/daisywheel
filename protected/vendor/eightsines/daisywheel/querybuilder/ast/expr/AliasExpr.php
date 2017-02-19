@@ -2,8 +2,8 @@
 
 namespace daisywheel\querybuilder\ast\expr;
 
-use daisywheel\querybuilder\BuildSpec;
 use daisywheel\querybuilder\ast\Expr;
+use daisywheel\querybuilder\BuildSpec;
 
 class AliasExpr implements Expr
 {

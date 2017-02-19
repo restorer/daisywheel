@@ -2,9 +2,9 @@
 
 namespace daisywheel\querybuilder\ast\parts;
 
+use daisywheel\querybuilder\ast\Part;
 use daisywheel\querybuilder\BuildException;
 use daisywheel\querybuilder\BuildSpec;
-use daisywheel\querybuilder\ast\Part;
 
 /**
  * @method DataTypePart default(mixed $defaultValue)
@@ -48,7 +48,7 @@ class DataTypePart implements Part
     protected $isNotNull = false;
 
     /** @var mixed|null */
-    protected $defaultValue = null;
+    protected $defaultValue;
 
     /**
      * @param BuildSpec $spec
@@ -56,19 +56,24 @@ class DataTypePart implements Part
      * @param string $type
      * @param mixed[] $options
      */
-    public function __construct($spec, $name, $type, $options = [])
+    public function __construct($spec, $name, $type, array $options = [])
     {
         $this->spec = $spec;
         $this->name = $name;
         $this->type = $type;
 
-        $this->options = array_map(/** @return int */ function ($v) {
-            return (int) $v;
-        }, $options);
+        $this->options = array_map(
+            /** @return int */
+            function ($v) {
+                return (int)$v;
+            },
+            $options
+        );
     }
 
     /**
      * @param boolean $isNotNull
+     *
      * @return self
      */
     public function notNull($isNotNull = true)
@@ -79,6 +84,7 @@ class DataTypePart implements Part
 
     /**
      * @param mixed $defaultValue
+     *
      * @return self
      */
     public function default_($defaultValue)
@@ -104,6 +110,7 @@ class DataTypePart implements Part
     /**
      * @param string $name
      * @param mixed $arguments
+     *
      * @throws BuildException
      * @return mixed
      */
@@ -122,12 +129,13 @@ class DataTypePart implements Part
      * @param int[] $options
      * @param boolean $isNotNull
      * @param string|null $quotedDefaultValue
+     *
      * @return string
      */
     public static function basicBuild($quotedName, $type, $options, $isNotNull, $quotedDefaultValue)
     {
         return "{$quotedName} {$type}"
-            . (empty($options) ? '' : ('(' . join(', ', $options) . ')'))
+            . (empty($options) ? '' : ('(' . implode(', ', $options) . ')'))
             . ($isNotNull ? ' NOT NULL' : '')
             . ($quotedDefaultValue === null ? '' : " DEFAULT {$quotedDefaultValue}");
     }

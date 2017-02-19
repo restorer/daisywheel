@@ -2,9 +2,9 @@
 
 namespace daisywheel\querybuilder\ast\parts;
 
-use daisywheel\querybuilder\BuildSpec;
 use daisywheel\querybuilder\ast\Expr;
 use daisywheel\querybuilder\ast\Part;
+use daisywheel\querybuilder\BuildSpec;
 
 class SetPart implements Part
 {
@@ -31,6 +31,10 @@ class SetPart implements Part
 
     /**
      * @see Part::buildPart()
+     *
+     * @param bool $swapDirection optional, default to false
+     *
+     * @return string
      */
     public function buildPart($swapDirection = false)
     {

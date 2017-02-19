@@ -2,8 +2,8 @@
 
 namespace daisywheel\querybuilder\ast\parts;
 
-use daisywheel\querybuilder\BuildSpec;
 use daisywheel\querybuilder\ast\Part;
+use daisywheel\querybuilder\BuildSpec;
 
 class TableAliasPart implements Part
 {
@@ -14,7 +14,7 @@ class TableAliasPart implements Part
     protected $table;
 
     /** @var string|null */
-    protected $alias = null;
+    protected $alias;
 
     /**
      * @param BuildSpec $spec

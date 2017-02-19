@@ -2,10 +2,11 @@
 
 namespace daisywheel\querybuilder\ast\expr;
 
-use daisywheel\querybuilder\BuildSpec;
 use daisywheel\querybuilder\ast\Expr;
 use daisywheel\querybuilder\ast\parts\DataTypePart;
+use daisywheel\querybuilder\ast\parts\IdentifierPart;
 use daisywheel\querybuilder\ast\parts\TablePart;
+use daisywheel\querybuilder\BuildSpec;
 
 class ColumnExpr implements Expr
 {
@@ -15,19 +16,19 @@ class ColumnExpr implements Expr
     /** @var string */
     protected $name;
 
-    /** @var TablePart|null */
-    protected $table;
+    /** @var TablePart|IdentifierPart|null */
+    protected $aliasPart;
 
     /**
      * @param BuildSpec $spec
      * @param string $name
-     * @param TablePart|null $table
+     * @param TablePart|IdentifierPart|null $aliasPart
      */
-    public function __construct($spec, $name, $table = null)
+    public function __construct($spec, $name, $aliasPart = null)
     {
         $this->spec = $spec;
         $this->name = $name;
-        $this->table = $table;
+        $this->aliasPart = $aliasPart;
     }
 
     /**
@@ -81,6 +82,7 @@ class ColumnExpr implements Expr
     /**
      * @param int $length
      * @param int $decimals
+     *
      * @return DataTypePart
      */
     public function decimal($length, $decimals)
@@ -130,6 +132,7 @@ class ColumnExpr implements Expr
 
     /**
      * @param int $length
+     *
      * @return DataTypePart
      * {@internal Up to 255}
      */
@@ -140,6 +143,7 @@ class ColumnExpr implements Expr
 
     /**
      * @param int $length
+     *
      * @return DataTypePart
      * {@internal Up to 255}
      */
@@ -207,7 +211,7 @@ class ColumnExpr implements Expr
      */
     public function buildExpr()
     {
-        return ($this->table === null ? '' : ($this->table->buildPart() . '.'))
+        return ($this->aliasPart === null ? '' : ($this->aliasPart->buildPart() . '.'))
             . ($this->name === '*' ? '*' : $this->spec->quoteIdentifier($this->name));
     }
 }

@@ -1,13 +1,13 @@
 <?php
 
-namespace daisywheel\querybuilder\ast\commands;
+namespace daisywheel\querybuilder\ast\commands\alter;
 
-use daisywheel\querybuilder\BuildException;
-use daisywheel\querybuilder\BuildSpec;
 use daisywheel\querybuilder\ast\Command;
 use daisywheel\querybuilder\ast\parts\TablePart;
+use daisywheel\querybuilder\BuildException;
+use daisywheel\querybuilder\BuildSpec;
 
-class CreateIndexCommand implements Command
+class AddIndexCommand implements Command
 {
     /** @var BuildSpec */
     protected $spec;
@@ -30,6 +30,7 @@ class CreateIndexCommand implements Command
      * @param string $name
      * @param string[] $columns
      * @param boolean $unique
+     *
      * @throws BuildException
      */
     public function __construct($spec, $table, $name, $columns, $unique)
@@ -57,9 +58,16 @@ class CreateIndexCommand implements Command
             . ' ON '
             . $this->table->buildPart()
             . ' ('
-            . join(', ', array_map(/** @return string */ function ($v) {
-                return $this->spec->quoteIdentifier($v);
-            }, $this->columns))
+            . implode(
+                ', ',
+                array_map(
+                    /** @return string */
+                    function ($v) {
+                        return $this->spec->quoteIdentifier($v);
+                    },
+                    $this->columns
+                )
+            )
             . ')';
     }
 

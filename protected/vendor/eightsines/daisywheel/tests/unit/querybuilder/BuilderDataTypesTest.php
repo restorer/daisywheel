@@ -10,29 +10,43 @@ class BuilderDataTypesTest extends \PHPUnit_Framework_TestCase
     /** @var QueryBuilder */
     protected $builder;
 
-    public function __construct()
+    /**
+     * @see \PHPUnit_Framework_TestCase::__construct()
+     * @inheritdoc
+     */
+    public function __construct($name = null, array $data = [], $dataName = '')
     {
+        parent::__construct($name, $data, $dataName);
         $this->builder = new QueryBuilder(new MockBuildSpec());
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\expr\ColumnExpr::primaryKey
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\expr\ColumnExpr::primaryKey
      */
     public function testPrimaryKey()
     {
-        $this->assertEquals('[id] INT NOT NULL IDENTITY(1, 1) PRIMARY KEY', $this->builder->col('id')->primaryKey()->buildPart());
+        $this->assertEquals(
+            '[id] INT NOT NULL IDENTITY(1, 1) PRIMARY KEY',
+            $this->builder->col('id')->primaryKey()->buildPart()
+        );
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\expr\ColumnExpr::bigPrimaryKey
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\expr\ColumnExpr::bigPrimaryKey
      */
     public function testBigPrimaryKey()
     {
-        $this->assertEquals('[id] BIGINT NOT NULL IDENTITY(1, 1) PRIMARY KEY', $this->builder->col('id')->bigPrimaryKey()->buildPart());
+        $this->assertEquals(
+            '[id] BIGINT NOT NULL IDENTITY(1, 1) PRIMARY KEY',
+            $this->builder->col('id')->bigPrimaryKey()->buildPart()
+        );
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\expr\ColumnExpr::tinyInt
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\expr\ColumnExpr::tinyInt
      */
     public function testTinyInt()
     {
@@ -40,7 +54,8 @@ class BuilderDataTypesTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\expr\ColumnExpr::smallInt
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\expr\ColumnExpr::smallInt
      */
     public function testSmallInt()
     {
@@ -48,7 +63,8 @@ class BuilderDataTypesTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\expr\ColumnExpr::int
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\expr\ColumnExpr::int
      */
     public function testInt()
     {
@@ -56,7 +72,8 @@ class BuilderDataTypesTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\expr\ColumnExpr::bigInt
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\expr\ColumnExpr::bigInt
      */
     public function testBigInt()
     {
@@ -64,7 +81,8 @@ class BuilderDataTypesTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\expr\ColumnExpr::decimal
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\expr\ColumnExpr::decimal
      */
     public function testDecimal()
     {
@@ -72,7 +90,8 @@ class BuilderDataTypesTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\expr\ColumnExpr::float
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\expr\ColumnExpr::float
      */
     public function testFloat()
     {
@@ -80,7 +99,8 @@ class BuilderDataTypesTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\expr\ColumnExpr::double
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\expr\ColumnExpr::double
      */
     public function testDouble()
     {
@@ -88,7 +108,8 @@ class BuilderDataTypesTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\expr\ColumnExpr::date
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\expr\ColumnExpr::date
      */
     public function testDate()
     {
@@ -96,7 +117,8 @@ class BuilderDataTypesTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\expr\ColumnExpr::time
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\expr\ColumnExpr::time
      */
     public function testTime()
     {
@@ -104,7 +126,8 @@ class BuilderDataTypesTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\expr\ColumnExpr::dateTime
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\expr\ColumnExpr::dateTime
      */
     public function testDateTime()
     {
@@ -112,7 +135,8 @@ class BuilderDataTypesTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\expr\ColumnExpr::char
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\expr\ColumnExpr::char
      */
     public function testChar()
     {
@@ -120,7 +144,8 @@ class BuilderDataTypesTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\expr\ColumnExpr::varChar
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\expr\ColumnExpr::varChar
      */
     public function testVarChar()
     {
@@ -128,7 +153,8 @@ class BuilderDataTypesTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\expr\ColumnExpr::text
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\expr\ColumnExpr::text
      */
     public function testText()
     {
@@ -136,7 +162,8 @@ class BuilderDataTypesTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\expr\ColumnExpr::mediumText
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\expr\ColumnExpr::mediumText
      */
     public function testMediumText()
     {
@@ -144,7 +171,8 @@ class BuilderDataTypesTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\expr\ColumnExpr::longText
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\expr\ColumnExpr::longText
      */
     public function testLongText()
     {
@@ -152,7 +180,8 @@ class BuilderDataTypesTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\expr\ColumnExpr::blob
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\expr\ColumnExpr::blob
      */
     public function testBlob()
     {
@@ -160,7 +189,8 @@ class BuilderDataTypesTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\expr\ColumnExpr::mediumBlob
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\expr\ColumnExpr::mediumBlob
      */
     public function testMediumBlob()
     {
@@ -168,7 +198,8 @@ class BuilderDataTypesTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\expr\ColumnExpr::longBlob
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\expr\ColumnExpr::longBlob
      */
     public function testLongBlob()
     {
@@ -176,7 +207,8 @@ class BuilderDataTypesTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\part\DataTypePart::notNull
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\parts\DataTypePart::notNull
      */
     public function testNotNull()
     {
@@ -185,7 +217,8 @@ class BuilderDataTypesTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\part\DataTypePart::default_
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\parts\DataTypePart::default_
      */
     public function testDefault()
     {
@@ -194,16 +227,21 @@ class BuilderDataTypesTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\ast\part\DataTypePart::notNull
-     * @covers daisywheel\querybuilder\ast\part\DataTypePart::default_
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\parts\DataTypePart::notNull
+     * @covers \daisywheel\querybuilder\ast\parts\DataTypePart::default_
      */
     public function testNotNullWithDefault()
     {
-        $this->assertEquals("[id] INT NOT NULL DEFAULT '0'", $this->builder->col('id')->int()->notNull()->default_(0)->buildPart());
+        $this->assertEquals(
+            "[id] INT NOT NULL DEFAULT '0'",
+            $this->builder->col('id')->int()->notNull()->default_(0)->buildPart()
+        );
     }
 
     /**
-     * @covers daisywheel\querybuilder\DataTypePart::__call
+     * @return void
+     * @covers \daisywheel\querybuilder\ast\parts\DataTypePart::__call
      */
     public function testMagicCall()
     {

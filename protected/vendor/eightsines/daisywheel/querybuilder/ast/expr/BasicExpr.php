@@ -2,9 +2,9 @@
 
 namespace daisywheel\querybuilder\ast\expr;
 
-use daisywheel\querybuilder\BuildException;
-use daisywheel\querybuilder\ast\Expr;
 use daisywheel\querybuilder\ast\commands\SelectCommand;
+use daisywheel\querybuilder\ast\Expr;
+use daisywheel\querybuilder\BuildException;
 
 class BasicExpr implements Expr
 {
@@ -21,7 +21,7 @@ class BasicExpr implements Expr
     /** @var string */
     protected $operator;
 
-    /** @var Expr[] */
+    /** @var array<Expr|Expr[]|SelectCommand> */
     protected $operands;
 
     /** @var string|null */
@@ -30,7 +30,7 @@ class BasicExpr implements Expr
     /**
      * @param string $type
      * @param string $operator
-     * @param Expr[] $operands
+     * @param array<Expr|Expr[]|SelectCommand> $operands
      * @param string|null $extraSql
      */
     protected function __construct($type, $operator, $operands, $extraSql = null)
@@ -43,6 +43,7 @@ class BasicExpr implements Expr
 
     /**
      * @see Expr::buildExpr()
+     * @psalm-suppress InvalidArgument
      */
     public function buildExpr()
     {
@@ -63,12 +64,21 @@ class BasicExpr implements Expr
                     return "({$this->extraSql})";
                 }
 
-                return "({$this->operands[0]->buildExpr()} {$this->operator} (" . join(', ', array_map(function ($v) {
-                    return $v->buildExpr();
-                }, $this->operands[1])) . '))';
+                return "({$this->operands[0]->buildExpr()} {$this->operator} (" . implode(
+                    ', ',
+                    array_map(
+                        /** @return string */
+                        function ($v) {
+                            /** @var Expr $v */
+                            return $v->buildExpr();
+                        },
+                        $this->operands[1]
+                    )
+                ) . '))';
             }
         }
 
+        /** @noinspection PhpUndefinedMethodInspection */
         if ($this->type === self::TYPE_EQ
             && ($this->operands[1] instanceof ValueExpr)
             && $this->operands[1]->isNull()
@@ -76,21 +86,30 @@ class BasicExpr implements Expr
             return "({$this->operands[0]->buildExpr()} {$this->extraSql})";
         }
 
-        return '(' . join(" {$this->operator} ", array_map(function ($v) {
-            return $v->buildExpr();
-        }, $this->operands)) . ')';
+        return '(' . implode(
+            " {$this->operator} ",
+            array_map(
+                /** @return string */
+                function ($v) {
+                    /** @var Expr $v */
+                    return $v->buildExpr();
+                },
+                $this->operands
+            )
+        ) . ')';
     }
 
     /**
      * @param string $operator
      * @param Expr[] $operands
+     *
      * @throws BuildException
      * @return BasicExpr
      */
     public static function createUnary($operator, $operands)
     {
         if (count($operands) !== 1) {
-            throw new BuildException("Exactly one operand required");
+            throw new BuildException('Exactly one operand required');
         }
 
         return new self(self::TYPE_UNARY, $operator, $operands);
@@ -99,6 +118,7 @@ class BasicExpr implements Expr
     /**
      * @param string $operator
      * @param Expr[] $operands
+     *
      * @throws BuildException
      * @return BasicExpr
      */
@@ -114,6 +134,7 @@ class BasicExpr implements Expr
     /**
      * @param string $operator
      * @param Expr[] $operands
+     *
      * @throws BuildException
      * @return BasicExpr
      */
@@ -130,6 +151,7 @@ class BasicExpr implements Expr
      * @param string $operator
      * @param Expr[] $operands
      * @param string $nullValueSql
+     *
      * @throws BuildException
      * @return BasicExpr
      */
@@ -144,8 +166,9 @@ class BasicExpr implements Expr
 
     /**
      * @param string $operator
-     * @param Expr[] $operands
+     * @param array<Expr|Expr[]|SelectCommand> $operands
      * @param string $emptyListValueSql
+     *
      * @throws BuildException
      * @return BasicExpr
      */
@@ -168,13 +191,14 @@ class BasicExpr implements Expr
     /**
      * @param string $operator
      * @param Expr[] $operands
+     *
      * @throws BuildException
      * @return BasicExpr
      */
     public static function createRightHand($operator, $operands)
     {
         if (count($operands) !== 1) {
-            throw new BuildException("Exactly one operand required");
+            throw new BuildException('Exactly one operand required');
         }
 
         return new self(self::TYPE_RIGHT_HAND, $operator, $operands);
@@ -183,6 +207,7 @@ class BasicExpr implements Expr
     /**
      * @param string $operator
      * @param Expr[] $operands
+     *
      * @throws BuildException
      * @return BasicExpr
      */

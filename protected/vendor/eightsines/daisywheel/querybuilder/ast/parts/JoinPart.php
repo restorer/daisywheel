@@ -2,9 +2,9 @@
 
 namespace daisywheel\querybuilder\ast\parts;
 
+use daisywheel\querybuilder\ast\commands\SelectCommand;
 use daisywheel\querybuilder\ast\Expr;
 use daisywheel\querybuilder\ast\Part;
-use daisywheel\querybuilder\ast\commands\SelectCommand;
 
 class JoinPart implements Part
 {
@@ -12,7 +12,7 @@ class JoinPart implements Part
     const TYPE_INNER = 'INNER';
     const TYPE_RIGHT = 'RIGHT';
 
-    /** @var SelectCommand */
+    /** @var SelectCommand|null */
     protected $owner;
 
     /** @var TableAliasPart */
@@ -38,7 +38,9 @@ class JoinPart implements Part
 
     /**
      * @param Expr $expr
+     *
      * @return SelectCommand
+     * @psalm-suppress InvalidReturnType
      */
     public function on($expr)
     {

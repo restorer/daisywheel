@@ -2,8 +2,17 @@
 
 namespace daisywheel\querybuilder\ast\parts;
 
+use daisywheel\querybuilder\ast\commands\CreateTableCommand;
+use daisywheel\querybuilder\ast\commands\SelectCommand;
 use daisywheel\querybuilder\ast\Part;
+use daisywheel\querybuilder\BuildException;
+use daisywheel\querybuilder\BuildSpec;
 
+/**
+ * @method ForeignKeyConstraintPart foreignKey(string $name, string|string[] $columns, string|TablePart $refTable, string|string[] $refColumns)
+ * @method CreateTableCommand asSelect(SelectCommand $select)
+ * @method string[] build()
+ */
 class ForeignKeyConstraintPart implements Part
 {
     const OPTION_RESTRICT = 'RESTRICT';
@@ -45,6 +54,7 @@ class ForeignKeyConstraintPart implements Part
      * @param string[] $columns
      * @param TablePart $refTable
      * @param string[] $refColumns
+     *
      * @throws BuildException
      */
     public function __construct($owner, $spec, $table, $name, $columns, $refTable, $refColumns)
@@ -127,14 +137,28 @@ class ForeignKeyConstraintPart implements Part
     {
         return $this->spec->buildCreateForeignKeyPart(
             "CONSTRAINT {$this->spec->quoteConstraint($this->table->getName(), $this->name)} FOREIGN KEY ("
-                . join(', ', array_map(/** @return string */ function ($v) {
-                    return $this->spec->quoteIdentifier($v);
-                }, $this->columns))
-                . ") REFERENCES {$this->refTable->buildPart()} ("
-                . join(', ', array_map(/** @return string */ function ($v) {
-                    return $this->spec->quoteIdentifier($v);
-                }, $this->refColumns))
-                . ')',
+            . implode(
+                ', ',
+                array_map(
+                    /** @return string */
+                    function ($v) {
+                        return $this->spec->quoteIdentifier($v);
+                    },
+                    $this->columns
+                )
+            )
+            . ") REFERENCES {$this->refTable->buildPart()} ("
+            . implode(
+                ', ',
+                array_map(
+                    /** @return string */
+                    function ($v) {
+                        return $this->spec->quoteIdentifier($v);
+                    },
+                    $this->refColumns
+                )
+            )
+            . ')',
             $this->onDeleteOption,
             $this->onUpdateOption
         );
@@ -143,6 +167,7 @@ class ForeignKeyConstraintPart implements Part
     /**
      * @param string $name
      * @param mixed $arguments
+     *
      * @return mixed
      */
     public function __call($name, $arguments)
@@ -154,6 +179,7 @@ class ForeignKeyConstraintPart implements Part
      * @param string $startSql
      * @param string $onDeleteOption
      * @param string $onUpdateOption
+     *
      * @return string
      */
     public static function basicBuild($startSql, $onDeleteOption, $onUpdateOption)

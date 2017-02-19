@@ -1,21 +1,21 @@
 <?php
 
-namespace daisywheel\querybuilder\ast\commands;
+namespace daisywheel\querybuilder\ast\commands\alter;
 
-use daisywheel\querybuilder\BuildSpec;
 use daisywheel\querybuilder\ast\Command;
 use daisywheel\querybuilder\ast\parts\TablePart;
+use daisywheel\querybuilder\BuildSpec;
 
-class DropIndexCommand implements Command
+class DropColumnCommand implements Command
 {
     /** @var BuildSpec */
     protected $spec;
 
-    /** @var string */
-    protected $name;
-
     /** @var TablePart */
     protected $table;
+
+    /** @var string */
+    protected $name;
 
     /**
      * @param BuildSpec $spec
@@ -34,18 +34,6 @@ class DropIndexCommand implements Command
      */
     public function build()
     {
-        return $this->spec->buildDropIndexCommand(
-            $this->table,
-            $this->spec->quoteConstraint($this->table->getName(), $this->name)
-        );
-    }
-
-    /**
-     * @param string $dropSql
-     * @return string[]
-     */
-    public static function basicBuild($dropSql)
-    {
-        return ["DROP INDEX {$dropSql}"];
+        return [];
     }
 }

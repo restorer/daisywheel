@@ -45,4 +45,8 @@ WHEN NOT MATCHED THEN INSERT (col1, vol2) VALUES (_qbsource.col1, _qbsource.col2
 
 SELECT col1, col2 INTO t1 FROM t2
 
+# rename table
+
+EXEC sp_rename 'old_table_name', 'new_table_name'
+
 */

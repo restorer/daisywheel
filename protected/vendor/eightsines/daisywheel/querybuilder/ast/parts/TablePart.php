@@ -2,8 +2,8 @@
 
 namespace daisywheel\querybuilder\ast\parts;
 
-use daisywheel\querybuilder\BuildSpec;
 use daisywheel\querybuilder\ast\Part;
+use daisywheel\querybuilder\BuildSpec;
 
 class TablePart implements Part
 {
@@ -55,6 +55,8 @@ class TablePart implements Part
     /**
      * @param BuildSpec $spec
      * @param string|TablePart $table
+     *
+     * @return TablePart
      */
     public static function create($spec, $table)
     {

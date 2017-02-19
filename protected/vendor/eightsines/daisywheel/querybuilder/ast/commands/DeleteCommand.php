@@ -12,7 +12,7 @@ class DeleteCommand implements Command
     protected $table;
 
     /** @var Expr|null */
-    protected $where = null;
+    protected $where;
 
     /**
      * @param TablePart $table
@@ -24,6 +24,7 @@ class DeleteCommand implements Command
 
     /**
      * @param Expr $expr
+     *
      * @return self
      */
     public function where($expr)

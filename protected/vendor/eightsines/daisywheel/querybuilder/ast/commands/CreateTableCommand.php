@@ -2,14 +2,15 @@
 
 namespace daisywheel\querybuilder\ast\commands;
 
-use daisywheel\querybuilder\BuildException;
-use daisywheel\querybuilder\BuildHelper;
-use daisywheel\querybuilder\BuildSpec;
 use daisywheel\querybuilder\ast\Command;
+use daisywheel\querybuilder\ast\commands\alter\AddIndexCommand;
 use daisywheel\querybuilder\ast\parts\DataTypePart;
 use daisywheel\querybuilder\ast\parts\ForeignKeyConstraintPart;
 use daisywheel\querybuilder\ast\parts\TablePart;
 use daisywheel\querybuilder\ast\parts\UniqueConstraintPart;
+use daisywheel\querybuilder\BuildException;
+use daisywheel\querybuilder\BuildHelper;
+use daisywheel\querybuilder\BuildSpec;
 
 class CreateTableCommand implements Command
 {
@@ -22,7 +23,7 @@ class CreateTableCommand implements Command
     /** @var DataTypePart[] */
     protected $columns;
 
-    /** @var CreateIndexCommand[] */
+    /** @var AddIndexCommand[] */
     protected $indexList = [];
 
     /** @var UniqueConstraintPart[] */
@@ -32,7 +33,7 @@ class CreateTableCommand implements Command
     protected $foreignKeyList = [];
 
     /** @var SelectCommand|null */
-    protected $select = null;
+    protected $select;
 
     /**
      * @param BuildSpec $spec
@@ -49,22 +50,29 @@ class CreateTableCommand implements Command
     /**
      * @param string $name
      * @param string|string[] $columns
+     *
      * @return self
+     * @throws BuildException
      * @psalm-suppress TypeCoercion
      */
     public function index($name, $columns)
     {
-        $this->indexList[] = new CreateIndexCommand($this->spec, $this->table, $name, BuildHelper::arg($columns), false);
+        /** @noinspection PhpParamsInspection */
+        $this->indexList[] = new AddIndexCommand($this->spec, $this->table, $name, BuildHelper::arg($columns), false);
         return $this;
     }
 
     /**
      * @param string $name
      * @param string|string[] $columns
+     *
      * @return self
+     * @throws BuildException
+     * @psalm-suppress TypeCoercion
      */
     public function unique($name, $columns)
     {
+        /** @noinspection PhpParamsInspection */
         $this->uniqueList[] = new UniqueConstraintPart($this->spec, $this->table, $name, BuildHelper::arg($columns));
         return $this;
     }
@@ -74,10 +82,14 @@ class CreateTableCommand implements Command
      * @param string|string[] $columns
      * @param string|TablePart $refTable
      * @param string|string[] $refColumns
+     *
      * @return ForeignKeyConstraintPart
+     * @throws BuildException
+     * @psalm-suppress TypeCoercion
      */
     public function foreignKey($name, $columns, $refTable, $refColumns)
     {
+        /** @noinspection PhpParamsInspection */
         $result = new ForeignKeyConstraintPart(
             $this,
             $this->spec,
@@ -94,6 +106,7 @@ class CreateTableCommand implements Command
 
     /**
      * @param SelectCommand $select
+     *
      * @return self
      */
     public function asSelect($select)
@@ -113,27 +126,53 @@ class CreateTableCommand implements Command
         }
 
         if ($this->select !== null) {
-            if (!empty($this->columns) || !empty($this->indexList) || !empty($this->uniqueList) || !empty($this->foreignKeyList)) {
-                throw new BuildException('For create-as-select no columns, indexes, unique indexes or foreign keys should be specified');
+            if (!empty($this->columns) || !empty($this->indexList) || !empty($this->uniqueList)
+                || !empty($this->foreignKeyList)
+            ) {
+                throw new BuildException(
+                    'For create-as-select no columns, indexes, unique indexes or foreign keys should be specified'
+                );
             }
 
-            return $this->spec->buildCreateTableAsSelectCommand($this->table->buildPart(), $this->table->getTemporary(), $this->select);
+            return $this->spec->buildCreateTableAsSelectCommand(
+                $this->table->buildPart(),
+                $this->table->getTemporary(),
+                $this->select
+            );
         }
 
         return $this->spec->buildCreateTableCommand(
             $this->table->buildPart(),
             $this->table->getTemporary(),
-            join(', ', array_merge(
-                array_map(/** @return string */ function ($v) {
-                    return $v->buildPart();
-                }, $this->columns),
-                array_map(/** @return string */ function ($v) {
-                    return $v->buildPart();
-                }, $this->uniqueList),
-                array_map(/** @return string */ function ($v) {
-                    return $v->buildPart();
-                }, $this->foreignKeyList)
-            )),
+            implode(
+                ', ',
+                array_merge(
+                    array_map(
+                        /** @return string */
+                        function ($v) {
+                            /** @var \daisywheel\querybuilder\ast\Part $v */
+                            return $v->buildPart();
+                        },
+                        $this->columns
+                    ),
+                    array_map(
+                        /** @return string */
+                        function ($v) {
+                            /** @var \daisywheel\querybuilder\ast\Part $v */
+                            return $v->buildPart();
+                        },
+                        $this->uniqueList
+                    ),
+                    array_map(
+                        /** @return string */
+                        function ($v) {
+                            /** @var \daisywheel\querybuilder\ast\Part $v */
+                            return $v->buildPart();
+                        },
+                        $this->foreignKeyList
+                    )
+                )
+            ),
             $this->indexList
         );
     }
@@ -143,16 +182,22 @@ class CreateTableCommand implements Command
      * @param string $quotedTable
      * @param string $partsSql
      * @param string $afterSql
-     * @param CreateIndexCommand[] $indexList
+     * @param AddIndexCommand[] $indexList
+     *
      * @return string[]
      */
     public static function basicBuild($prependSql, $quotedTable, $partsSql, $afterSql, $indexList)
     {
         return array_merge(
             ["CREATE {$prependSql}TABLE {$quotedTable} ($partsSql)$afterSql"],
-            array_map(/** @return string */ function ($v) {
-                return $v->buildSql();
-            }, $indexList)
+            array_map(
+                /** @return string */
+                function ($v) {
+                    /** @var AddIndexCommand $v */
+                    return $v->buildSql();
+                },
+                $indexList
+            )
         );
     }
 
@@ -160,7 +205,9 @@ class CreateTableCommand implements Command
      * @param string $prependSql
      * @param string $quotedTable
      * @param SelectCommand $select
+     *
      * @return string[]
+     * @throws \daisywheel\querybuilder\BuildException
      */
     public static function basicBuildCreateAsSelect($prependSql, $quotedTable, $select)
     {

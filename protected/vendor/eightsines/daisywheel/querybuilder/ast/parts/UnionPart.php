@@ -2,8 +2,8 @@
 
 namespace daisywheel\querybuilder\ast\parts;
 
-use daisywheel\querybuilder\ast\Part;
 use daisywheel\querybuilder\ast\commands\SelectCommand;
+use daisywheel\querybuilder\ast\Part;
 
 class UnionPart implements Part
 {
@@ -25,6 +25,7 @@ class UnionPart implements Part
 
     /**
      * @see Part::buildPart()
+     * @throws \daisywheel\querybuilder\BuildException
      */
     public function buildPart()
     {

@@ -2,8 +2,8 @@
 
 namespace daisywheel\querybuilder\ast\expr;
 
-use daisywheel\querybuilder\BuildException;
 use daisywheel\querybuilder\ast\Expr;
+use daisywheel\querybuilder\BuildException;
 
 class PlaceholderExpr implements Expr
 {
@@ -12,6 +12,7 @@ class PlaceholderExpr implements Expr
 
     /**
      * @param string $name
+     *
      * @throws BuildException
      */
     public function __construct($name)

@@ -11,27 +11,34 @@ class BuilderCommandsTest extends \PHPUnit_Framework_TestCase
     /** @var QueryBuilder */
     protected $builder;
 
-    public function __construct()
+    /**
+     * @see \PHPUnit_Framework_TestCase::__construct()
+     * @inheritdoc
+     */
+    public function __construct($name = null, array $data = [], $dataName = '')
     {
+        parent::__construct($name, $data, $dataName);
         $this->builder = new QueryBuilder(new MockBuildSpec());
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::select
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::select
      */
     public function testSelect()
     {
+        /** @noinspection UnNecessaryDoubleQuotesInspection */
         $expected = [
             "SELECT * FROM (SELECT TOP '10' * FROM (SELECT DISTINCT TOP '110' [t].*"
             . ", [user].[id] AS [userId]"
-            . ", (LOWER([#User].[firstName]) || ' ' || UPPER([User].[lastName])) AS [fullName]"
-            . ", (SELECT [id] FROM [SomeTable] WHERE ([uid] = '42')) AS [innerSelect]"
-            . " FROM [UserDriverData] AS [t], [#UserDriverDataAddition] AS [udda]"
-            . " LEFT JOIN [OrderQueue] AS [orderQueue] ON (([orderQueue].[orderId] = '42')"
+            . ", (LOWER([#qb_User].[firstName]) || ' ' || UPPER([qb_User].[lastName])) AS [fullName]"
+            . ", (SELECT [id] FROM [qb_SomeTable] WHERE ([uid] = '42')) AS [innerSelect]"
+            . " FROM [qb_UserDriverData] AS [t], [#qb_UserDriverDataAddition] AS [udda]"
+            . " LEFT JOIN [qb_OrderQueue] AS [orderQueue] ON (([orderQueue].[orderId] = '42')"
             . " AND ([orderQueue].[driverUserId] = [t].[userId])"
             . " AND ([orderQueue].[dismissed] = '1'))"
-            . " INNER JOIN [#User] AS [user] ON ([user].[id] = [t].[userId])"
-            . " RIGHT JOIN [#User] ON ([id] = [t].[userId])"
+            . " INNER JOIN [#qb_User] AS [user] ON ([user].[id] = [t].[userId])"
+            . " RIGHT JOIN [#qb_User] ON ([id] = [t].[userId])"
             . " WHERE (([t].[status] <> 'active')"
             . " AND ([t].[status] = :status)"
             . " AND (NOT ([user].[isDeleted] = '0'))"
@@ -42,52 +49,73 @@ class BuilderCommandsTest extends \PHPUnit_Framework_TestCase
             . " ORDER BY [fullName] DESC, [id] ASC)"
             . " ORDER BY [fullName] ASC, [id] DESC)"
             . " ORDER BY [fullName] DESC, [id] ASC"
-            . " UNION SELECT * FROM [Address]"
-            . " UNION ALL SELECT * FROM [#House]"
+            . " UNION SELECT * FROM [qb_Address]"
+            . " UNION ALL SELECT * FROM [#qb_House]"
         ];
 
         $actual = $this->builder->select(
-                $this->builder->col('t', '*'),
-                $this->builder->as($this->builder->col('user', 'id'), 'userId'),
-                $this->builder->as($this->builder->concat(
+            $this->builder->col('t', '*'),
+            $this->builder->as($this->builder->col('user', 'id'), 'userId'),
+            $this->builder->as(
+                $this->builder->concat(
                     $this->builder->lower($this->builder->col($this->builder->temp('User'), 'firstName')),
                     $this->builder->val(' '),
-                    $this->builder->upper($this->builder->col('User', 'lastName'))
-                ), 'fullName'),
-                $this->builder->as(
-                    $this->builder->select($this->builder->col('id'))
-                        ->from('SomeTable')
-                        ->where($this->builder->eq($this->builder->col('uid'), $this->builder->val(42))),
-                    'innerSelect'
-                )
+                    $this->builder->upper($this->builder->col($this->builder->tab('User'), 'lastName'))
+                ),
+                'fullName'
+            ),
+            $this->builder->as(
+                $this->builder->select($this->builder->col('id'))
+                    ->from('SomeTable')
+                    ->where($this->builder->eq($this->builder->col('uid'), $this->builder->val(42))),
+                'innerSelect'
             )
+        )
             ->distinct()
             ->from('UserDriverData', 't')
             ->from($this->builder->temp('UserDriverDataAddition'), 'udda')
-            ->leftJoin('OrderQueue', 'orderQueue')->on($this->builder->and(
-                $this->builder->eq($this->builder->col('orderQueue', 'orderId'), $this->builder->val(42)),
-                $this->builder->eq($this->builder->col('orderQueue', 'driverUserId'), $this->builder->col('t', 'userId')),
-                $this->builder->eq($this->builder->col('orderQueue', 'dismissed'), $this->builder->val(1))
-            ))
+            ->leftJoin('OrderQueue', 'orderQueue')->on(
+                $this->builder->and(
+                    $this->builder->eq($this->builder->col('orderQueue', 'orderId'), $this->builder->val(42)),
+                    $this->builder->eq(
+                        $this->builder->col('orderQueue', 'driverUserId'),
+                        $this->builder->col('t', 'userId')
+                    ),
+                    $this->builder->eq($this->builder->col('orderQueue', 'dismissed'), $this->builder->val(1))
+                )
+            )
             ->innerJoin($this->builder->temp('User'), 'user')->on(
                 $this->builder->eq($this->builder->col('user', 'id'), $this->builder->col('t', 'userId'))
             )
             ->rightJoin($this->builder->temp('User'))->on(
                 $this->builder->eq($this->builder->col('id'), $this->builder->col('t', 'userId'))
             )
-            ->where($this->builder->and(
-                $this->builder->neq($this->builder->col('t', 'status'), $this->builder->val('active')),
-                $this->builder->eq($this->builder->col('t', 'status'), $this->builder->param(':status')),
-                $this->builder->not($this->builder->eq($this->builder->col('user', 'isDeleted'), $this->builder->val(0))),
-                $this->builder->or(
-                    $this->builder->eq($this->builder->col('orderQueue', 'id'), $this->builder->val(null)),
-                    $this->builder->neq($this->builder->col('orderQueue', 'uid'), $this->builder->val(null))
-                ),
-                $this->builder->notIn($this->builder->col('t', 'id'), [])
-            ))
+            ->where(
+                $this->builder->and(
+                    $this->builder->neq($this->builder->col('t', 'status'), $this->builder->val('active')),
+                    $this->builder->eq($this->builder->col('t', 'status'), $this->builder->param(':status')),
+                    $this->builder->not(
+                        $this->builder->eq($this->builder->col('user', 'isDeleted'), $this->builder->val(0))
+                    ),
+                    $this->builder->or(
+                        $this->builder->eq($this->builder->col('orderQueue', 'id'), $this->builder->val(null)),
+                        $this->builder->neq($this->builder->col('orderQueue', 'uid'), $this->builder->val(null))
+                    ),
+                    $this->builder->notIn($this->builder->col('t', 'id'), [])
+                )
+            )
             ->groupBy($this->builder->col('user', 'id'))
             ->groupBy($this->builder->col('user', 'fullName'))
-            ->having($this->builder->in($this->builder->col('t', 'id'), [$this->builder->val(41), $this->builder->val(42), $this->builder->val(43)]))
+            ->having(
+                $this->builder->in(
+                    $this->builder->col('t', 'id'),
+                    [
+                        $this->builder->val(41),
+                        $this->builder->val(42),
+                        $this->builder->val(43)
+                    ]
+                )
+            )
             ->orderBy($this->builder->col('fullName'), false)
             ->orderBy($this->builder->col('id'))
             ->offset(100)
@@ -104,29 +132,39 @@ class BuilderCommandsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::insertInfo
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::insertInto
      */
     public function testInsert()
     {
+        /** @noinspection UnNecessaryDoubleQuotesInspection */
         $expected = [
-            "INSERT INTO [Address] ([id], [name]) VALUES"
+            "INSERT INTO [qb_Address] ([id], [name]) VALUES"
             . " ('1', 'Test 1')"
             . ", ('1', ('Test' || ' 2'))"
             . ", ('3', 'Test 3')"
             . ", ('4', 'Test 4')"
-            . " SELECT [id], [name] FROM [House]"
+            . " SELECT [id], [name] FROM [qb_House]"
         ];
 
+        /** @noinspection ClassConstantCanBeUsedInspection */
         $actual = $this->builder->insertInto('Address', ['id', 'name'])
             ->values($this->builder->val(1), $this->builder->val('Test 1'))
-            ->values([$this->builder->val(1), $this->builder->concat($this->builder->val('Test'), $this->builder->val(' 2'))])
-            ->values([
-                [$this->builder->val(3), $this->builder->val('Test 3')],
-                [$this->builder->val(4), $this->builder->val('Test 4')],
-            ])
+            ->values(
+                [
+                    $this->builder->val(1),
+                    $this->builder->concat($this->builder->val('Test'), $this->builder->val(' 2'))
+                ]
+            )
+            ->values(
+                [
+                    [$this->builder->val(3), $this->builder->val('Test 3')],
+                    [$this->builder->val(4), $this->builder->val('Test 4')],
+                ]
+            )
             ->select(
                 $this->builder->select($this->builder->col('id'), $this->builder->col('name'))
-                ->from('House')
+                    ->from('House')
             )
             ->build();
 
@@ -134,89 +172,147 @@ class BuilderCommandsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::insertOrIgnore
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::insertOrIgnore
      */
     public function testInsertOrIgnore()
     {
+        /** @noinspection UnNecessaryDoubleQuotesInspection */
         $expected = [
             "WITH qb_1 ([id], [key], [name], [subname]) AS (VALUES"
             . " ('1', 'a', 'n1', 's1')"
             . ", ('2', 'b', 'n2', 's2')"
             . ", ('3', 'c', 'n3', 's3')"
             . ", ('4', 'd', 'n4', 's4')"
-            . ") INSERT INTO [Address] ([id], [key], [name], [subname])"
+            . ") INSERT INTO [qb_Address] ([id], [key], [name], [subname])"
             . " SELECT [id], [key], [name], [subname] FROM qb_1"
-            . " WHERE NOT EXISTS (SELECT 1 FROM [Address] WHERE [id] = qb_1.[id] AND [key] = qb_1.[key])"
+            . " WHERE NOT EXISTS (SELECT 1 FROM [qb_Address] WHERE [id] = qb_1.[id] AND [key] = qb_1.[key])"
         ];
 
         $actual = $this->builder->insertOrIgnore('Address', ['id', 'key'], ['name', 'subname'])
-            ->values($this->builder->val('1'), $this->builder->val('a'), $this->builder->val('n1'), $this->builder->val('s1'))
-            ->values([$this->builder->val('2'), $this->builder->val('b'), $this->builder->val('n2'), $this->builder->val('s2')])
-            ->values([
-                [$this->builder->val('3'), $this->builder->val('c'), $this->builder->val('n3'), $this->builder->val('s3')],
-                [$this->builder->val('4'), $this->builder->val('d'), $this->builder->val('n4'), $this->builder->val('s4')],
-            ])
+            ->values(
+                $this->builder->val('1'),
+                $this->builder->val('a'),
+                $this->builder->val('n1'),
+                $this->builder->val('s1')
+            )
+            ->values(
+                [
+                    $this->builder->val('2'),
+                    $this->builder->val('b'),
+                    $this->builder->val('n2'),
+                    $this->builder->val('s2')
+                ]
+            )
+            ->values(
+                [
+                    [
+                        $this->builder->val('3'),
+                        $this->builder->val('c'),
+                        $this->builder->val('n3'),
+                        $this->builder->val('s3')
+                    ],
+                    [
+                        $this->builder->val('4'),
+                        $this->builder->val('d'),
+                        $this->builder->val('n4'),
+                        $this->builder->val('s4')
+                    ],
+                ]
+            )
             ->build();
 
         $this->assertEquals($expected, $actual);
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::insertOrReplace
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::insertOrReplace
      */
     public function testInsertOrReplace()
     {
+        /** @noinspection UnNecessaryDoubleQuotesInspection */
         $expected = [
             "WITH qbv_1 ([id], [key], [name], [subname]) AS (VALUES"
             . " ('1', 'a', 'n1', 's1')"
             . ", ('2', 'b', 'n2', 's2')"
             . ", ('3', 'c', 'n3', 's3')"
             . ", ('4', 'd', 'n4', 's4')"
-            . "), qbu_2 AS (UPDATE [Address] SET"
+            . "), qbu_2 AS (UPDATE [qb_Address] SET"
             . " [name] = qbv_1.[name]"
             . ", [subname] = qbv_1.[subname]"
             . " FROM qbv_1 WHERE"
-            . " [Address].[id] = qbv_1.[id]"
-            . " AND [Address].[key] = qbv_1.[key]"
-            . " RETURNING [Address].*"
-            . ") INSERT INTO [Address] ([id], [key], [name], [subname])"
+            . " [qb_Address].[id] = qbv_1.[id]"
+            . " AND [qb_Address].[key] = qbv_1.[key]"
+            . " RETURNING [qb_Address].*"
+            . ") INSERT INTO [qb_Address] ([id], [key], [name], [subname])"
             . " SELECT [id], [key], [name], [subname] FROM qbv_1"
             . " WHERE NOT EXISTS (SELECT 1 FROM qbu_2 WHERE [id] = qbv_1.[id] AND [key] = qbv_1.[key])"
         ];
 
         $actual = $this->builder->insertOrReplace('Address', ['id', 'key'], ['name', 'subname'])
-            ->values($this->builder->val('1'), $this->builder->val('a'), $this->builder->val('n1'), $this->builder->val('s1'))
-            ->values([$this->builder->val('2'), $this->builder->val('b'), $this->builder->val('n2'), $this->builder->val('s2')])
-            ->values([
-                [$this->builder->val('3'), $this->builder->val('c'), $this->builder->val('n3'), $this->builder->val('s3')],
-                [$this->builder->val('4'), $this->builder->val('d'), $this->builder->val('n4'), $this->builder->val('s4')],
-            ])
+            ->values(
+                $this->builder->val('1'),
+                $this->builder->val('a'),
+                $this->builder->val('n1'),
+                $this->builder->val('s1')
+            )
+            ->values(
+                [
+                    $this->builder->val('2'),
+                    $this->builder->val('b'),
+                    $this->builder->val('n2'),
+                    $this->builder->val('s2')
+                ]
+            )
+            ->values(
+                [
+                    [
+                        $this->builder->val('3'),
+                        $this->builder->val('c'),
+                        $this->builder->val('n3'),
+                        $this->builder->val('s3')
+                    ],
+                    [
+                        $this->builder->val('4'),
+                        $this->builder->val('d'),
+                        $this->builder->val('n4'),
+                        $this->builder->val('s4')
+                    ],
+                ]
+            )
             ->build();
 
         $this->assertEquals($expected, $actual);
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::update
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::update
      */
     public function testUpdate()
     {
-        $expected = "UPDATE [Address] SET"
+        /** @noinspection UnNecessaryDoubleQuotesInspection */
+        $expected = [
+            "UPDATE [qb_Address] SET"
             . " [name] = '42'"
             . ", [name] = ([id] || ' 2')"
             . ", [name] = ([id] + '1')"
             . ", [name] = '42'"
             . ", [name] = '24'"
-            . " WHERE ([id] = '42')";
+            . " WHERE ([id] = '42')"
+        ];
 
         $actual = $this->builder->update('Address')
             ->set('name', $this->builder->val(42))
             ->set('name', $this->builder->concat($this->builder->col('id'), $this->builder->val(' 2')))
             ->set('name', $this->builder->add($this->builder->col('id'), $this->builder->val(1)))
-            ->set([
-                ['name', $this->builder->val(42)],
-                ['name', $this->builder->val(24)]
-            ])
+            ->set(
+                [
+                    ['name', $this->builder->val(42)],
+                    ['name', $this->builder->val(24)]
+                ]
+            )
             ->where($this->builder->eq($this->builder->col('id'), $this->builder->val(42)))
             ->build();
 
@@ -224,54 +320,65 @@ class BuilderCommandsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::deleteFrom
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::deleteFrom
      */
     public function testDelete()
     {
-        $this->assertEquals(["DELETE FROM [Address] WHERE ([id] = '42')"], $this->builder->deleteFrom('Address')
-            ->where($this->builder->eq($this->builder->col('id'), $this->builder->val(42)))
-            ->build()
+        $this->assertEquals(
+            ["DELETE FROM [qb_Address] WHERE ([id] = '42')"],
+            $this->builder->deleteFrom('Address')
+                ->where($this->builder->eq($this->builder->col('id'), $this->builder->val(42)))
+                ->build()
         );
 
-        $this->assertEquals(["DELETE FROM " . "[#Address] WHERE ([id] = '42')"], $this->builder->deleteFrom($this->builder->temp('Address'))
-            ->where($this->builder->eq($this->builder->col('id'), $this->builder->val(42)))
-            ->build()
+        $this->assertEquals(
+            ['DELETE FROM ' . "[#qb_Address] WHERE ([id] = '42')"],
+            $this->builder->deleteFrom($this->builder->temp('Address'))
+                ->where($this->builder->eq($this->builder->col('id'), $this->builder->val(42)))
+                ->build()
         );
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::createTable
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::createTable
      */
     public function testCreateTable()
     {
+        /** @noinspection UnNecessaryDoubleQuotesInspection */
         $expected = [
-            "CREATE TEMPORARY TABLE " . "[#Test] ("
-                . "[id] INT NOT NULL IDENTITY(1, 1) PRIMARY KEY"
-                . ", [id2] BIGINT NOT NULL IDENTITY(1, 1) PRIMARY KEY"
-                . ", [key] NVARCHAR(255) NOT NULL"
-                . ", [name] NVARCHAR(255) DEFAULT 'TestDefault'"
-                . ", [fooId] INT"
-                . ", CONSTRAINT [Test_idxKey] UNIQUE ([key])"
-                . ", CONSTRAINT [Test_idxKeyFooId] UNIQUE ([key], [fooId])"
-                . ", CONSTRAINT [Test_fkFooTest] FOREIGN KEY ([fooId]) REFERENCES [Foo] ([id]) ON DELETE CASCADE ON UPDATE RESTRICT"
-                . ", CONSTRAINT [Test_fkFooTest] FOREIGN KEY ([fooId]) REFERENCES [Foo] ([id]) ON DELETE RESTRICT ON UPDATE CASCADE"
-                . ", CONSTRAINT [Test_fkFooTest] FOREIGN KEY ([fooId]) REFERENCES [Foo] ([id]) ON DELETE RESTRICT ON UPDATE SET NULL"
-                . ", CONSTRAINT [Test_fkFooTest] FOREIGN KEY ([fooId]) REFERENCES [Foo] ([id]) ON DELETE CASCADE ON UPDATE RESTRICT"
-                . ", CONSTRAINT [Test_fkFooTest] FOREIGN KEY ([fooId]) REFERENCES [Foo] ([id]) ON DELETE SET NULL ON UPDATE CASCADE"
-                . ", CONSTRAINT [Test_fkFooTest2] FOREIGN KEY ([key], [fooId]) REFERENCES [Foo] ([uid], [id])"
-                . " ON DELETE RESTRICT ON UPDATE RESTRICT"
-                . ") ENGINE=InnoDB, CHARACTER SET = 'utf8', COLLATE = 'utf8_general_ci'",
-            "CREATE INDEX [Test_idxName] ON " . "[#Test] ([name])",
-            "CREATE INDEX [Test_idxKeyName] ON " . "[#Test] ([key], [name])",
+            "CREATE TEMPORARY TABLE " . "[#qb_Test] ("
+            . "[id] INT NOT NULL IDENTITY(1, 1) PRIMARY KEY"
+            . ", [id2] BIGINT NOT NULL IDENTITY(1, 1) PRIMARY KEY"
+            . ", [key] NVARCHAR(255) NOT NULL"
+            . ", [name] NVARCHAR(255) DEFAULT 'TestDefault'"
+            . ", [fooId] INT"
+            . ", CONSTRAINT [qb_Test_idxKey] UNIQUE ([key])"
+            . ", CONSTRAINT [qb_Test_idxKeyFooId] UNIQUE ([key], [fooId])"
+            . ", CONSTRAINT [qb_Test_fkFooTest] FOREIGN KEY ([fooId]) REFERENCES [qb_Foo] ([id]) ON DELETE CASCADE ON UPDATE RESTRICT"
+            . ", CONSTRAINT [qb_Test_fkFooTest] FOREIGN KEY ([fooId]) REFERENCES [qb_Foo] ([id]) ON DELETE RESTRICT ON UPDATE CASCADE"
+            . ", CONSTRAINT [qb_Test_fkFooTest] FOREIGN KEY ([fooId]) REFERENCES [qb_Foo] ([id]) ON DELETE RESTRICT ON UPDATE SET NULL"
+            . ", CONSTRAINT [qb_Test_fkFooTest] FOREIGN KEY ([fooId]) REFERENCES [qb_Foo] ([id]) ON DELETE CASCADE ON UPDATE RESTRICT"
+            . ", CONSTRAINT [qb_Test_fkFooTest] FOREIGN KEY ([fooId]) REFERENCES [qb_Foo] ([id]) ON DELETE SET NULL ON UPDATE CASCADE"
+            . ", CONSTRAINT [qb_Test_fkFooTest2] FOREIGN KEY ([key], [fooId]) REFERENCES [qb_Foo] ([uid], [id])"
+            . " ON DELETE RESTRICT ON UPDATE RESTRICT"
+            . ") ENGINE=InnoDB, CHARACTER SET = 'utf8', COLLATE = 'utf8_general_ci'",
+            "CREATE INDEX [qb_Test_idxName] ON " . "[#qb_Test] ([name])",
+            "CREATE INDEX [qb_Test_idxKeyName] ON " . "[#qb_Test] ([key], [name])",
         ];
 
-        $actual = $this->builder->createTable($this->builder->temp('Test'), [
+        /** @noinspection ClassConstantCanBeUsedInspection */
+        $actual = $this->builder->createTable(
+            $this->builder->temp('Test'),
+            [
                 $this->builder->col('id')->primaryKey(),
                 $this->builder->col('id2')->bigPrimaryKey(),
                 $this->builder->col('key')->varChar(255)->notNull(),
                 $this->builder->col('name')->varChar(255)->default('TestDefault'),
                 $this->builder->col('fooId')->int()
-            ])
+            ]
+        )
             ->index('idxName', 'name')
             ->index('idxKeyName', ['key', 'name'])
             ->unique('idxKey', 'key')
@@ -282,13 +389,13 @@ class BuilderCommandsTest extends \PHPUnit_Framework_TestCase
             ->foreignKey('fkFooTest', 'fooId', 'Foo', 'id')->onDeleteCascade()->onUpdateRestrict()
             ->foreignKey('fkFooTest', 'fooId', 'Foo', 'id')->onDeleteSetNull()->onUpdateCascade()
             ->foreignKey('fkFooTest2', ['key', 'fooId'], 'Foo', ['uid', 'id'])
-            ->build()
-        ;
+            ->build();
 
         $this->assertEquals($expected, $actual);
 
+        /** @noinspection ClassConstantCanBeUsedInspection */
         $this->assertEquals(
-            ['CREATE TABLE [Test] AS SELECT * FROM [Foo]'],
+            ['CREATE TABLE [qb_Test] AS SELECT * FROM [qb_Foo]'],
             $this->builder->createTable('Test')->asSelect(
                 $this->builder->select($this->builder->col('*'))->from('Foo')
             )->build()
@@ -296,14 +403,16 @@ class BuilderCommandsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::createTable
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::createTable
      */
     public function testCreateTableExt()
     {
         $builderExt = new QueryBuilder(new MockExtBuildSpec());
 
+        /** @noinspection ClassConstantCanBeUsedInspection */
         $this->assertEquals(
-            ['SELECT * INTO [Test] FROM [Foo]'],
+            ['SELECT * INTO [qb_Test] FROM [qb_Foo]'],
             $builderExt->createTable('Test')->asSelect(
                 $builderExt->select($builderExt->col('*'))->from('Foo')
             )->build()
@@ -311,8 +420,9 @@ class BuilderCommandsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::createTable
-     * @expectedException daisywheel\querybuilder\BuildException
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::createTable
+     * @expectedException \daisywheel\querybuilder\BuildException
      */
     public function testCreateTableException1()
     {
@@ -320,21 +430,26 @@ class BuilderCommandsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::createTable
-     * @expectedException daisywheel\querybuilder\BuildException
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::createTable
+     * @expectedException \daisywheel\querybuilder\BuildException
      */
     public function testCreateTableException2()
     {
-        $this->builder->createTable('User', [
-            $this->builder->col('id')->primaryKey(),
-        ])->asSelect(
+        $this->builder->createTable(
+            'User',
+            [
+                $this->builder->col('id')->primaryKey(),
+            ]
+        )->asSelect(
             $this->builder->select($this->builder->col('*'))->from('Foo')
         )->build();
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::createTable
-     * @expectedException daisywheel\querybuilder\BuildException
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::createTable
+     * @expectedException \daisywheel\querybuilder\BuildException
      */
     public function testCreateTableException3()
     {
@@ -346,8 +461,9 @@ class BuilderCommandsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::createTable
-     * @expectedException daisywheel\querybuilder\BuildException
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::createTable
+     * @expectedException \daisywheel\querybuilder\BuildException
      */
     public function testCreateTableException4()
     {
@@ -359,8 +475,9 @@ class BuilderCommandsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::createTable
-     * @expectedException daisywheel\querybuilder\BuildException
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::createTable
+     * @expectedException \daisywheel\querybuilder\BuildException
      */
     public function testCreateTableException5()
     {
@@ -371,112 +488,51 @@ class BuilderCommandsTest extends \PHPUnit_Framework_TestCase
             )->build();
     }
 
-    public function x_testAlterTable()
-    {
-    }
-
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::dropTable
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::dropTable
      */
     public function testDropTable()
     {
-        $this->assertEquals(["DROP TABLE [User]"], $this->builder->dropTable('User')->build());
-        $this->assertEquals(["DROP TEMPORARY TABLE [#User]"], $this->builder->dropTable($this->builder->temp('User'))->build());
+        $this->assertEquals(['DROP TABLE [qb_User]'], $this->builder->dropTable('User')->build());
+
+        $this->assertEquals(
+            ['DROP TEMPORARY TABLE [#qb_User]'],
+            $this->builder->dropTable($this->builder->temp('User'))->build()
+        );
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::truncateTable
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::truncateTable
      */
     public function testTruncateTable()
     {
-        $this->assertEquals(["TRUNCATE TABLE [User] RESTART IDENTITY"], $this->builder->truncateTable('User')->build());
-        $this->assertEquals(["TRUNCATE TABLE [#User] RESTART IDENTITY"], $this->builder->truncateTable($this->builder->temp('User'))->build());
+        $this->assertEquals(
+            ['TRUNCATE TABLE [qb_User] RESTART IDENTITY'],
+            $this->builder->truncateTable('User')->build()
+        );
+
+        $this->assertEquals(
+            ['TRUNCATE TABLE [#qb_User] RESTART IDENTITY'],
+            $this->builder->truncateTable($this->builder->temp('User'))->build()
+        );
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::truncateTable
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::truncateTable
      */
     public function testTruncateTableExt()
     {
         $builderExt = new QueryBuilder(new MockExtBuildSpec());
 
-        $this->assertEquals([
-            "DELETE FROM [User]",
-            "DELETE FROM SQLITE_SEQUENCE WHERE name = 'User'",
-        ], $builderExt->truncateTable('User')->build());
-    }
-
-    /**
-     * @covers daisywheel\querybuilder\QueryBuilder::createIndex
-     */
-    public function testCreateIndex()
-    {
         $this->assertEquals(
-            ['CREATE INDEX [User_name] ON [User] ([name])'],
-            $this->builder->createIndex('User', 'name', 'name')->build()
+            [
+                'DELETE FROM [qb_User]',
+                "DELETE FROM SQLITE_SEQUENCE WHERE name = 'qb_User'",
+            ],
+            $builderExt->truncateTable('User')->build()
         );
-
-        $this->assertEquals(
-            ['CREATE INDEX [User_name] ON ' . '[#User] ([name])'],
-            $this->builder->createIndex($this->builder->temp('User'), 'name', 'name')->build()
-        );
-
-        $this->assertEquals(
-            ['CREATE INDEX [User_name] ON [User] ([name])'],
-            $this->builder->createIndex('User', 'name', ['name'])->build()
-        );
-
-        $this->assertEquals(
-            ['CREATE INDEX [User_fullName] ON [User] ([firstName], [lastName])'],
-            $this->builder->createIndex('User', 'fullName', ['firstName', 'lastName'])->build()
-        );
-    }
-
-    /**
-     * @covers daisywheel\querybuilder\QueryBuilder::createIndex
-     * @expectedException daisywheel\querybuilder\BuildException
-     */
-    public function testCreateIndexException()
-    {
-        $this->builder->createIndex('User', 'name', []);
-    }
-
-    /**
-     * @covers daisywheel\querybuilder\QueryBuilder::createUniqueIndex
-     */
-    public function testCreateUniqueIndex()
-    {
-        $this->assertEquals(
-            ['CREATE UNIQUE INDEX [User_name] ON [User] ([name])'],
-            $this->builder->createUniqueIndex('User', 'name', 'name')->build()
-        );
-
-        $this->assertEquals(
-            ['CREATE UNIQUE INDEX [User_name] ON [User] ([name])'],
-            $this->builder->createUniqueIndex('User', 'name', ['name'])->build()
-        );
-
-        $this->assertEquals(
-            ['CREATE UNIQUE INDEX [User_fullName] ON [User] ([firstName], [lastName])'],
-            $this->builder->createUniqueIndex('User', 'fullName', ['firstName', 'lastName'])->build()
-        );
-    }
-
-    /**
-     * @covers daisywheel\querybuilder\QueryBuilder::createUniqueIndex
-     * @expectedException daisywheel\querybuilder\BuildException
-     */
-    public function testCreateUniqueIndexException()
-    {
-        $this->builder->createUniqueIndex('User', 'name', []);
-    }
-
-    /**
-     * @covers daisywheel\querybuilder\QueryBuilder::dropIndex
-     */
-    public function testDropIndex()
-    {
-        $this->assertEquals(["DROP INDEX [User_name] ON [User]"], $this->builder->dropIndex('User', 'name')->build());
-        $this->assertEquals(["DROP INDEX [User_name] ON [#User]"], $this->builder->dropIndex($this->builder->temp('User'), 'name')->build());
     }
 }

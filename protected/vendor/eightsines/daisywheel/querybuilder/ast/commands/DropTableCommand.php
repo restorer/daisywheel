@@ -2,9 +2,9 @@
 
 namespace daisywheel\querybuilder\ast\commands;
 
-use daisywheel\querybuilder\BuildSpec;
 use daisywheel\querybuilder\ast\Command;
 use daisywheel\querybuilder\ast\parts\TablePart;
+use daisywheel\querybuilder\BuildSpec;
 
 class DropTableCommand implements Command
 {
@@ -35,6 +35,7 @@ class DropTableCommand implements Command
     /**
      * @param string $prependSql
      * @param string $quotedTable
+     *
      * @return string[]
      */
     public static function basicBuild($prependSql, $quotedTable)

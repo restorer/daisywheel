@@ -2,9 +2,9 @@
 
 namespace daisywheel\querybuilder\ast\expr;
 
-use daisywheel\querybuilder\BuildSpec;
-use daisywheel\querybuilder\BuildException;
 use daisywheel\querybuilder\ast\Expr;
+use daisywheel\querybuilder\BuildException;
+use daisywheel\querybuilder\BuildSpec;
 
 class ValueExpr implements Expr
 {
@@ -17,6 +17,7 @@ class ValueExpr implements Expr
     /**
      * @param BuildSpec $spec
      * @param mixed $value
+     *
      * @throws BuildException
      */
     public function __construct($spec, $value)

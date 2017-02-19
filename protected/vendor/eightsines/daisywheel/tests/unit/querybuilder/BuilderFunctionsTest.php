@@ -10,13 +10,19 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
     /** @var QueryBuilder */
     protected $builder;
 
-    public function __construct()
+    /**
+     * @see \PHPUnit_Framework_TestCase::__construct()
+     * @inheritdoc
+     */
+    public function __construct($name = null, array $data = [], $dataName = '')
     {
+        parent::__construct($name, $data, $dataName);
         $this->builder = new QueryBuilder(new MockBuildSpec());
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::avg
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::avg
      */
     public function testAvg()
     {
@@ -24,7 +30,8 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::count
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::count
      */
     public function testCount()
     {
@@ -32,7 +39,8 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::max
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::max
      */
     public function testMax()
     {
@@ -40,7 +48,8 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::min
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::min
      */
     public function testMin()
     {
@@ -48,7 +57,8 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::sum
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::sum
      */
     public function testSum()
     {
@@ -56,32 +66,45 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::coalesce
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::coalesce
      */
     public function testCoalesce()
     {
         $this->assertEquals('COALESCE([likes])', $this->builder->coalesce($this->builder->col('likes'))->buildExpr());
 
-        $this->assertEquals('COALESCE([likes], 1)', $this->builder->coalesce(
-            $this->builder->col('likes'),
-            $this->builder->val(true)
-        )->buildExpr());
+        $this->assertEquals(
+            'COALESCE([likes], 1)',
+            $this->builder->coalesce(
+                $this->builder->col('likes'),
+                $this->builder->val(true)
+            )->buildExpr()
+        );
 
-        $this->assertEquals('COALESCE([likes], NULL, 1)', $this->builder->coalesce(
-            $this->builder->col('likes'),
-            $this->builder->val(null),
-            $this->builder->val(true)
-        )->buildExpr());
+        $this->assertEquals(
+            'COALESCE([likes], NULL, 1)',
+            $this->builder->coalesce(
+                $this->builder->col('likes'),
+                $this->builder->val(null),
+                $this->builder->val(true)
+            )->buildExpr()
+        );
 
-        $this->assertEquals('COALESCE([likes], NULL, 1)', $this->builder->coalesce([
-            $this->builder->col('likes'),
-            $this->builder->val(null),
-            $this->builder->val(true)
-        ])->buildExpr());
+        $this->assertEquals(
+            'COALESCE([likes], NULL, 1)',
+            $this->builder->coalesce(
+                [
+                    $this->builder->col('likes'),
+                    $this->builder->val(null),
+                    $this->builder->val(true)
+                ]
+            )->buildExpr()
+        );
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::abs
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::abs
      */
     public function testAbs()
     {
@@ -89,7 +112,8 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::round
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::round
      */
     public function testRound()
     {
@@ -97,32 +121,45 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::concat
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::concat
      */
     public function testConcat()
     {
         $this->assertEquals("('This')", $this->builder->concat($this->builder->val('This'))->buildExpr());
 
-        $this->assertEquals("('This' || 'is')", $this->builder->concat(
-            $this->builder->val('This'),
-            $this->builder->val('is')
-        )->buildExpr());
+        $this->assertEquals(
+            "('This' || 'is')",
+            $this->builder->concat(
+                $this->builder->val('This'),
+                $this->builder->val('is')
+            )->buildExpr()
+        );
 
-        $this->assertEquals("('This' || 'is' || 'the test')", $this->builder->concat(
-            $this->builder->val('This'),
-            $this->builder->val('is'),
-            $this->builder->val('the test')
-        )->buildExpr());
+        $this->assertEquals(
+            "('This' || 'is' || 'the test')",
+            $this->builder->concat(
+                $this->builder->val('This'),
+                $this->builder->val('is'),
+                $this->builder->val('the test')
+            )->buildExpr()
+        );
 
-        $this->assertEquals("('This' || 'is' || 'the test')", $this->builder->concat([
-            $this->builder->val('This'),
-            $this->builder->val('is'),
-            $this->builder->val('the test'),
-        ])->buildExpr());
+        $this->assertEquals(
+            "('This' || 'is' || 'the test')",
+            $this->builder->concat(
+                [
+                    $this->builder->val('This'),
+                    $this->builder->val('is'),
+                    $this->builder->val('the test'),
+                ]
+            )->buildExpr()
+        );
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::length
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::length
      */
     public function testLength()
     {
@@ -130,7 +167,8 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::lower
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::lower
      */
     public function testLower()
     {
@@ -138,7 +176,8 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::ltrim
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::ltrim
      */
     public function testLtrim()
     {
@@ -146,7 +185,8 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::rtrim
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::rtrim
      */
     public function testRtrim()
     {
@@ -154,24 +194,32 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::substr
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::substr
      */
     public function testSubstr()
     {
-        $this->assertEquals("SUBSTRING([name], '2')", $this->builder->substr(
-            $this->builder->col('name'),
-            $this->builder->val(2)
-        )->buildExpr());
+        $this->assertEquals(
+            "SUBSTRING([name], '2')",
+            $this->builder->substr(
+                $this->builder->col('name'),
+                $this->builder->val(2)
+            )->buildExpr()
+        );
 
-        $this->assertEquals("SUBSTRING([name], '2', '3')", $this->builder->substr(
-            $this->builder->col('name'),
-            $this->builder->val(2),
-            $this->builder->val(3)
-        )->buildExpr());
+        $this->assertEquals(
+            "SUBSTRING([name], '2', '3')",
+            $this->builder->substr(
+                $this->builder->col('name'),
+                $this->builder->val(2),
+                $this->builder->val(3)
+            )->buildExpr()
+        );
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::trim
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::trim
      */
     public function testTrim()
     {
@@ -179,7 +227,8 @@ class BuilderFunctionsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers daisywheel\querybuilder\QueryBuilder::upper
+     * @return void
+     * @covers \daisywheel\querybuilder\QueryBuilder::upper
      */
     public function testUpper()
     {

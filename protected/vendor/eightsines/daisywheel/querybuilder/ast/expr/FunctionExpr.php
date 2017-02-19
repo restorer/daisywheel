@@ -2,9 +2,9 @@
 
 namespace daisywheel\querybuilder\ast\expr;
 
-use daisywheel\querybuilder\BuildSpec;
-use daisywheel\querybuilder\BuildException;
 use daisywheel\querybuilder\ast\Expr;
+use daisywheel\querybuilder\BuildException;
+use daisywheel\querybuilder\BuildSpec;
 
 class FunctionExpr implements Expr
 {
@@ -38,12 +38,13 @@ class FunctionExpr implements Expr
      * @param BuildSpec $spec
      * @param string $type
      * @param Expr[] $operands
+     *
      * @throws BuildException
      */
     public function __construct($spec, $type, $operands)
     {
         if (empty($operands)) {
-            throw new BuildException("At least one operand required");
+            throw new BuildException('At least one operand required');
         }
 
         $this->spec = $spec;
@@ -62,12 +63,21 @@ class FunctionExpr implements Expr
     /**
      * @param string $type
      * @param Expr[] $operands
+     *
      * @return string
      */
     public static function basicBuildExpr($type, $operands)
     {
-        return "{$type}(" . join(', ', array_map(function ($v) {
-            return $v->buildExpr();
-        }, $operands)) . ')';
+        return "{$type}(" . implode(
+                ', ',
+                array_map(
+                    /** @return string */
+                    function ($v) {
+                        /** @var Expr $v */
+                        return $v->buildExpr();
+                    },
+                    $operands
+                )
+            ) . ')';
     }
 }
